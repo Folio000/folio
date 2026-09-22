@@ -2,208 +2,102 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Folio</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
+:root{
+  --bg:#f0f7f4;--surface:#ffffff;--border:#d4e8e0;
+  --accent:#059669;--accent-dim:#047857;--accent-soft:#d1fae5;--accent-faint:#f0fdf9;
+  --text:#0f2b1f;--text2:#2d5a43;--muted:#6b8f7d;
+  --pos:#059669;--neg:#dc2626;--neg-soft:#fef2f2;--neu:#92400e;--neu-soft:#fffbeb;
+  --font:'Inter',system-ui,sans-serif;--r:10px;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0a1a13;--surface:#0f2419;--border:#1a3d28;
+  --text:#e8f5ef;--text2:#a3c9b4;--muted:#5a7a6d;
+  --accent-soft:#052e16;--accent-faint:#0a1a13;
+  --neg-soft:#2d0a0a;--neu-soft:#1c1500;
+  --sh:0 1px 3px rgba(0,0,0,.2),0 4px 16px rgba(0,0,0,.15);
+}}
+:root[data-theme="dark"]{
+  --bg:#0a1a13;--surface:#0f2419;--border:#1a3d28;
+  --text:#e8f5ef;--text2:#a3c9b4;--muted:#5a7a6d;
+  --accent-soft:#052e16;--accent-faint:#0a1a13;
+  --sh:0 1px 3px rgba(0,0,0,.2),0 4px 16px rgba(0,0,0,.15);
+}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Inter',sans-serif;background:#f0f7f4;color:#111;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;}
-#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;opacity:.07;pointer-events:none;z-index:0;}
-nav{position:relative;z-index:1;padding:20px 40px;display:flex;align-items:center;}
-.nav-logo{font-size:15px;font-weight:700;letter-spacing:.5px;}
-main{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;}
 
-/* WALLET */
-.wallet-wrap{margin-bottom:44px;position:relative;width:120px;height:90px;}
-.wallet-body{position:absolute;bottom:0;left:0;width:110px;height:75px;background:linear-gradient(135deg,#059669,#047857);border-radius:10px;box-shadow:0 8px 32px rgba(5,150,105,.25);}
-.wallet-flap{position:absolute;top:0;left:0;width:110px;height:38px;background:linear-gradient(135deg,#10b981,#059669);border-radius:10px 10px 0 0;border-bottom:1px solid rgba(255,255,255,.15);}
-.wallet-pocket{position:absolute;bottom:10px;right:-12px;width:36px;height:52px;background:linear-gradient(135deg,#065f46,#047857);border-radius:6px;border:1px solid rgba(255,255,255,.15);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;}
-.pocket-dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.4);}
-.wallet-card{position:absolute;bottom:14px;left:8px;width:60px;height:36px;background:rgba(255,255,255,.15);border-radius:5px;border:1px solid rgba(255,255,255,.25);}
-.wallet-card::after{content:'';position:absolute;top:8px;left:6px;width:14px;height:10px;background:rgba(255,255,255,.3);border-radius:2px;}
+/* LAYOUT */
+.page{display:grid;grid-template-columns:1fr 320px;min-height:100vh;}
+@media(max-width:760px){.page{grid-template-columns:1fr;}}
 
-/* FORM */
-.form-wrap{width:100%;max-width:540px;}
-.textarea-wrap{position:relative;background:#fff;border:1.5px solid #ddeee8;border-radius:14px;overflow:hidden;transition:border-color .2s;box-shadow:0 2px 12px rgba(0,0,0,.04);}
-.textarea-wrap:focus-within{border-color:#059669;}
-textarea{width:100%;background:transparent;border:none;color:#111;font-family:'Inter',sans-serif;font-size:15px;line-height:1.65;padding:18px;resize:none;height:120px;outline:none;}
-textarea::placeholder{color:#a0b4ac;}
-.form-row{display:flex;gap:10px;margin-top:10px;}
-.lang-pill{display:flex;align-items:center;gap:7px;background:#fff;border:1.5px solid #ddeee8;border-radius:9px;padding:0 16px;font-size:12px;font-weight:500;color:#6b7c74;white-space:nowrap;min-width:110px;}
-.ldot{width:7px;height:7px;border-radius:50%;background:#ccc;transition:background .3s;}
-.ldot.fr{background:#059669;}
-.ldot.en{background:#7c3aed;}
-button{flex:1;background:#059669;color:#fff;border:none;border-radius:9px;padding:14px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s;letter-spacing:.2px;}
-button:hover{background:#047857;}
-button:disabled{background:#a5c9be;cursor:not-allowed;}
+/* MAIN */
+.main{display:flex;flex-direction:column;align-items:center;padding:48px 32px 48px;gap:24px;}
+@media(max-width:760px){.main{padding:32px 16px;}}
+
+/* LOGO */
+.logo{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:440px;}
+.logo-mark{position:relative;width:96px;height:72px;}
+.logo-name{font-size:28px;font-weight:700;letter-spacing:-1px;color:var(--text);}
+.logo-sub{font-size:12px;color:var(--muted);letter-spacing:.3px;font-weight:400;}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;width:100%;max-width:440px;box-shadow:var(--sh);}
+
+/* TEXTAREA */
+.field-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px;display:block;}
+textarea{width:100%;border:1.5px solid var(--border);border-radius:7px;padding:12px 14px;font-family:var(--font);font-size:14px;line-height:1.6;color:var(--text);background:var(--bg);resize:none;outline:none;transition:border-color .18s;height:96px;}
+textarea:focus{border-color:var(--accent);}
+.lang-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px;min-height:20px;}
+.lang-detected{font-size:11px;color:var(--muted);font-weight:500;}
+.btn{width:100%;margin-top:12px;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,opacity .15s;letter-spacing:.1px;}
+.btn:hover{background:var(--accent-dim);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
 
 /* RESULT */
-.result{margin-top:14px;border-radius:14px;padding:22px 24px;display:none;animation:up .3s ease;border:1.5px solid transparent;}
-@keyframes up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.result.positive{background:#ecfdf5;border-color:#a7f3d0;}
-.result.negative{background:#fef2f2;border-color:#fca5a5;}
-.result.neutral {background:#fffbeb;border-color:#fde68a;}
-.r-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
-.r-left{}
-.r-emoji{font-size:28px;margin-bottom:4px;}
-.r-label{font-size:18px;font-weight:700;text-transform:capitalize;}
-.positive .r-label{color:#059669;}
-.negative .r-label{color:#dc2626;}
-.neutral  .r-label{color:#d97706;}
-.r-meaning{font-size:13px;color:#6b7c74;margin-top:2px;}
-.r-pct{font-size:22px;font-weight:700;text-align:right;}
-.positive .r-pct{color:#059669;}
-.negative .r-pct{color:#dc2626;}
-.neutral  .r-pct{color:#d97706;}
-.r-pct-label{font-size:11px;font-weight:500;color:#a0b4ac;text-align:right;margin-top:1px;}
-.bar-track{height:4px;background:#0000000d;border-radius:99px;overflow:hidden;}
-.bar-fill{height:100%;border-radius:99px;transition:width .7s cubic-bezier(.4,0,.2,1);}
-.positive .bar-fill{background:#059669;}
-.negative .bar-fill{background:#dc2626;}
-.neutral  .bar-fill{background:#d97706;}
+.result{display:none;width:100%;max-width:440px;}
+.result-card{border-radius:var(--r);padding:22px 24px;border:1px solid transparent;}
+.result-card.pos{background:var(--accent-faint);border-color:#a7f3d0;}
+.result-card.neg{background:var(--neg-soft);border-color:#fecaca;}
+.result-card.neu{background:var(--neu-soft);border-color:#fde68a;}
+.result-label{font-size:26px;font-weight:700;line-height:1;margin-bottom:6px;}
+.result-label.pos{color:var(--pos);}
+.result-label.neg{color:var(--neg);}
+.result-label.neu{color:var(--neu);}
+.result-meaning{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:16px;}
+.result-bar-track{background:rgba(0,0,0,.06);border-radius:4px;height:6px;overflow:hidden;margin-bottom:6px;}
+.result-bar-fill{height:100%;border-radius:4px;transition:width .7s cubic-bezier(.4,0,.2,1);}
+.result-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
 
-/* HISTORY */
-.history{width:100%;max-width:540px;margin-top:20px;}
-.h-title{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#a0b4ac;margin-bottom:10px;padding-left:2px;}
-.h-item{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:#fff;border:1.5px solid #e8f0ed;border-radius:9px;margin-bottom:6px;animation:up .2s ease;}
-.h-text{font-size:13px;color:#6b7c74;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:12px;}
-.h-badge{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:3px 10px;border-radius:999px;flex-shrink:0;}
-.h-badge.positive{background:#d1fae5;color:#059669;}
-.h-badge.negative{background:#fee2e2;color:#dc2626;}
-.h-badge.neutral {background:#fef3c7;color:#d97706;}
+/* SIDEBAR */
+.sidebar{border-left:1px solid var(--border);background:var(--surface);padding:32px 20px;display:flex;flex-direction:column;gap:0;}
+@media(max-width:760px){.sidebar{border-left:none;border-top:1px solid var(--border);padding:24px 16px;}}
+.sidebar-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:14px;}
+.hist-empty{font-size:13px;color:var(--muted);line-height:1.6;}
+.hist-list{display:flex;flex-direction:column;gap:8px;}
+.hist-item{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:default;}
+.hist-text{font-size:12px;color:var(--text);line-height:1.5;margin-bottom:6px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.hist-footer{display:flex;align-items:center;justify-content:space-between;}
+.hist-badge{font-size:10px;font-weight:700;letter-spacing:.3px;padding:2px 8px;border-radius:4px;text-transform:uppercase;}
+.hist-badge.pos{background:var(--accent-soft);color:var(--pos);}
+.hist-badge.neg{background:#fee2e2;color:#991b1b;}
+.hist-badge.neu{background:#fef3c7;color:#92400e;}
+.hist-score{font-size:11px;color:var(--muted);font-weight:500;}
 </style>
 </head>
 <body>
-<canvas id="bg-canvas"></canvas>
-<nav><div class="nav-logo">FOLIO</div></nav>
-<main>
-  <div class="wallet-wrap">
-    <div class="wallet-body"></div>
-    <div class="wallet-flap"></div>
-    <div class="wallet-pocket">
-      <div class="pocket-dot"></div>
-      <div class="pocket-dot"></div>
-      <div class="pocket-dot"></div>
-    </div>
-    <div class="wallet-card"></div>
-  </div>
+<div class="page">
 
-  <div class="form-wrap">
-    <div class="textarea-wrap">
-      <textarea id="input" placeholder="Collez un titre, une news ou un texte financier…"></textarea>
-    </div>
-    <div class="form-row">
-      <div class="lang-pill"><div class="ldot" id="ldot"></div><span id="ltext">Détection auto</span></div>
-      <button id="btn" onclick="analyze()">Analyser</button>
-    </div>
-    <div class="result" id="result">
-      <div class="r-top">
-        <div class="r-left">
-          <div class="r-emoji" id="remoji"></div>
-          <div class="r-label" id="rlabel"></div>
-          <div class="r-meaning" id="rmeaning"></div>
-        </div>
-        <div>
-          <div class="r-pct" id="rpct"></div>
-          <div class="r-pct-label">confiance IA</div>
-        </div>
-      </div>
-      <div class="bar-track"><div class="bar-fill" id="rbar" style="width:0%"></div></div>
-    </div>
-  </div>
-
-  <div class="history" id="history" style="display:none">
-    <div class="h-title">Historique</div>
-    <div id="hlist"></div>
-  </div>
-</main>
-
-<script>
-/* ── Candlestick background ── */
-const cv=document.getElementById('bg-canvas');
-const ctx=cv.getContext('2d');
-function drawChart(){
-  cv.width=window.innerWidth;cv.height=window.innerHeight;
-  ctx.clearRect(0,0,cv.width,cv.height);
-  const n=Math.floor(cv.width/28)+2;
-  const h=cv.height*.6,base=cv.height*.75;
-  let price=cv.height*.4;
-  for(let i=0;i<n;i++){
-    const x=i*28+14;
-    const open=price;
-    price+=( Math.random()-.48)*40;
-    const close=price;
-    const high=Math.min(open,close)-Math.random()*20;
-    const low=Math.max(open,close)+Math.random()*20;
-    const bull=close<open;
-    ctx.strokeStyle=ctx.fillStyle=bull?'#059669':'#dc2626';
-    ctx.lineWidth=1.5;
-    ctx.beginPath();ctx.moveTo(x,high);ctx.lineTo(x,low);ctx.stroke();
-    const top=Math.min(open,close),ht=Math.abs(close-open)||2;
-    ctx.fillRect(x-5,top,10,ht);
-  }
-}
-drawChart();
-window.addEventListener('resize',drawChart);
-
-/* ── Language detection ── */
-const inp=document.getElementById('input');
-const ldot=document.getElementById('ldot');
-const ltext=document.getElementById('ltext');
-
-function detectLang(t){
-  const frWords=/\b(le|la|les|de|du|des|un|une|est|et|en|au|aux|pour|avec|sur|par|pas|ne|que|qui|dans|ce|cet|cette|ces|se|il|elle|nous|vous|ils|elles|son|sa|ses|mon|ma|mes|ton|ta|tes|leur|leurs|mais|très|plus|tout|fait|bien|lors|quand|dont|car|donc|ainsi|comme|entre|depuis|mois|cours|hausse|baisse|marché|bourse|actions|titre|titres|dernier|derniers|première|premier|après|avant|aussi|encore|même|déjà|toujours|jamais|souvent)\b/gi;
-  return (t.match(frWords)||[]).length>=2?'fr':'en';
-}
-
-inp.addEventListener('input',()=>{
-  const t=inp.value.trim();
-  if(t.length<4){ldot.className='ldot';ltext.textContent='Détection auto';return;}
-  const l=detectLang(t);
-  ldot.className='ldot '+l;
-  ltext.textContent=l==='fr'?'🇫🇷 Français':'🇬🇧 English';
-});
-inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))analyze();});
-
-/* ── Analysis ── */
-const meanings={
-  positive:{emoji:'📈',fr:'Signal haussier — sentiment favorable au marché',en:'Bullish signal — market-positive sentiment'},
-  negative:{emoji:'📉',fr:'Signal baissier — sentiment défavorable au marché',en:'Bearish signal — market-negative sentiment'},
-  neutral :{emoji:'⚖️',fr:'Signal neutre — pas de biais directionnel clair',en:'Neutral signal — no clear directional bias'}
-};
-
-const hist=[];
-async function analyze(){
-  const text=inp.value.trim();if(!text)return;
-  const btn=document.getElementById('btn');
-  btn.disabled=true;btn.textContent='Analyse en cours…';
-  try{
-    const r=await fetch(`/api/sentiment?text=${encodeURIComponent(text)}`,{method:'POST'});
-    const d=await r.json();
-    const pct=Math.round(d.score*100);
-    const lang=detectLang(text);
-    const m=meanings[d.label]||meanings.neutral;
-    const res=document.getElementById('result');
-    res.className='result '+d.label;res.style.display='block';
-    document.getElementById('remoji').textContent=m.emoji;
-    document.getElementById('rlabel').textContent=d.label;
-    document.getElementById('rmeaning').textContent=lang==='fr'?m.fr:m.en;
-    document.getElementById('rpct').textContent=pct+'%';
-    setTimeout(()=>{document.getElementById('rbar').style.width=pct+'%';},50);
-    hist.unshift({text:text.slice(0,55)+(text.length>55?'…':''),label:d.label,score:pct});
-    if(hist.length>5)hist.pop();
-    renderHist();
-  }catch(e){alert('Erreur serveur');}
-  btn.disabled=false;btn.textContent='Analyser';
-}
-
-function renderHist(){
-  const el=document.getElementById('history');
-  const list=document.getElementById('hlist');
-  if(!hist.length){el.style.display='none';return;}
-  el.style.display='block';
-  list.innerHTML=hist.map(h=>`<div class="h-item"><div class="h-text">${h.text}</div><div class="h-badge ${h.label}">${h.label} ${h.score}%</div></div>`).join('');
-}
-</script>
-</body>
-</html>
+  <!-- MAIN -->
+  <div class="main">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg width="96" height="72" viewBox="0 0 96 72" fill="none">
+          <!-- Wallet body -->
+          <rect x="4" y="20" width="88" height="48" rx="9" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>
+          <!-- Wallet flap (top) -->
+          <path d="M4 29 Q4 20 13 20 L83 20 Q92 20 92 29 L92 34
+cd ~/folio && git add static/index.html && git commit -m "Two-column layout, multilingual labels, no emojis, redesigned logo" && git push
