@@ -7,276 +7,397 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f0f7f4;--surface:#ffffff;--border:#d4e8e0;
+  --bg:#f0f7f4;--surface:#fff;--border:#d4e8e0;
   --accent:#059669;--accent-dim:#047857;--accent-soft:#d1fae5;--accent-faint:#f0fdf9;
   --text:#0f2b1f;--text2:#2d5a43;--muted:#6b8f7d;
-  --pos:#059669;--neg:#dc2626;--neg-soft:#fef2f2;--neu:#92400e;--neu-soft:#fffbeb;
+  --pos:#059669;--pos-bg:#f0fdf9;--pos-border:#a7f3d0;
+  --neg:#dc2626;--neg-bg:#fef2f2;--neg-border:#fecaca;
+  --neu:#92400e;--neu-bg:#fffbeb;--neu-border:#fde68a;
   --font:'Inter',system-ui,sans-serif;--r:10px;
-  --sh:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
+  --sh:0 1px 3px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.04);
 }
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0a1a13;--surface:#0f2419;--border:#1a3d28;
   --text:#e8f5ef;--text2:#a3c9b4;--muted:#5a7a6d;
   --accent-soft:#052e16;--accent-faint:#0a1a13;
-  --neg-soft:#2d0a0a;--neu-soft:#1c1500;
+  --pos-bg:#052e16;--pos-border:#065f46;
+  --neg-bg:#2d0a0a;--neg-border:#7f1d1d;
+  --neu-bg:#1c1500;--neu-border:#78350f;
   --sh:0 1px 3px rgba(0,0,0,.2),0 4px 16px rgba(0,0,0,.15);
 }}
 :root[data-theme="dark"]{
   --bg:#0a1a13;--surface:#0f2419;--border:#1a3d28;
   --text:#e8f5ef;--text2:#a3c9b4;--muted:#5a7a6d;
   --accent-soft:#052e16;--accent-faint:#0a1a13;
+  --pos-bg:#052e16;--pos-border:#065f46;
+  --neg-bg:#2d0a0a;--neg-border:#7f1d1d;
   --sh:0 1px 3px rgba(0,0,0,.2),0 4px 16px rgba(0,0,0,.15);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;}
 
-/* LAYOUT */
-.page{display:grid;grid-template-columns:1fr 320px;min-height:100vh;}
-@media(max-width:760px){.page{grid-template-columns:1fr;}}
+.page{display:grid;grid-template-columns:1fr 300px;min-height:100vh;}
+@media(max-width:800px){.page{grid-template-columns:1fr;}}
 
-/* MAIN */
-.main{display:flex;flex-direction:column;align-items:center;padding:48px 32px 48px;gap:24px;}
-@media(max-width:760px){.main{padding:32px 16px;}}
+.main{display:flex;flex-direction:column;align-items:center;padding:44px 28px;gap:20px;}
+@media(max-width:800px){.main{padding:28px 16px;}}
 
 /* LOGO */
-.logo{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:440px;}
-.logo-mark{position:relative;width:96px;height:72px;}
-.logo-name{font-size:28px;font-weight:700;letter-spacing:-1px;color:var(--text);}
-.logo-sub{font-size:12px;color:var(--muted);letter-spacing:.3px;font-weight:400;}
+.logo{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:480px;}
+.logo-name{font-size:26px;font-weight:700;letter-spacing:-0.8px;}
+.logo-sub{font-size:12px;color:var(--muted);letter-spacing:.2px;}
 
-/* CARD */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;width:100%;max-width:440px;box-shadow:var(--sh);}
-
-/* TEXTAREA */
+/* INPUT CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:480px;box-shadow:var(--sh);}
 .field-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px;display:block;}
-textarea{width:100%;border:1.5px solid var(--border);border-radius:7px;padding:12px 14px;font-family:var(--font);font-size:14px;line-height:1.6;color:var(--text);background:var(--bg);resize:none;outline:none;transition:border-color .18s;height:96px;}
+textarea{width:100%;border:1.5px solid var(--border);border-radius:7px;padding:12px 14px;font-family:var(--font);font-size:14px;line-height:1.6;color:var(--text);background:var(--bg);resize:none;outline:none;transition:border-color .18s;height:90px;}
 textarea:focus{border-color:var(--accent);}
-.lang-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px;min-height:20px;}
-.lang-detected{font-size:11px;color:var(--muted);font-weight:500;}
-.btn{width:100%;margin-top:12px;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,opacity .15s;letter-spacing:.1px;}
+.input-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;min-height:18px;}
+.lang-tag{font-size:11px;color:var(--muted);font-weight:500;}
+.hint{font-size:11px;color:var(--muted);}
+.btn{width:100%;margin-top:12px;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;}
 .btn:hover{background:var(--accent-dim);}
 .btn:disabled{opacity:.5;cursor:not-allowed;}
 
-/* RESULT */
-.result{display:none;width:100%;max-width:440px;}
-.result-card{border-radius:var(--r);padding:22px 24px;border:1px solid transparent;}
-.result-card.pos{background:var(--accent-faint);border-color:#a7f3d0;}
-.result-card.neg{background:var(--neg-soft);border-color:#fecaca;}
-.result-card.neu{background:var(--neu-soft);border-color:#fde68a;}
-.result-label{font-size:26px;font-weight:700;line-height:1;margin-bottom:6px;}
-.result-label.pos{color:var(--pos);}
-.result-label.neg{color:var(--neg);}
-.result-label.neu{color:var(--neu);}
-.result-meaning{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:16px;}
-.result-bar-track{background:rgba(0,0,0,.06);border-radius:4px;height:6px;overflow:hidden;margin-bottom:6px;}
-.result-bar-fill{height:100%;border-radius:4px;transition:width .7s cubic-bezier(.4,0,.2,1);}
-.result-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+/* RAPPORT */
+.rapport{display:none;width:100%;max-width:480px;display:flex;flex-direction:column;gap:14px;}
+.rapport{display:none;}
+
+/* SENTIMENT BLOCK */
+.sent-card{border-radius:var(--r);padding:20px 22px;border:1px solid transparent;}
+.sent-card.pos{background:var(--pos-bg);border-color:var(--pos-border);}
+.sent-card.neg{background:var(--neg-bg);border-color:var(--neg-border);}
+.sent-card.neu{background:var(--neu-bg);border-color:var(--neu-border);}
+.sent-label{font-size:24px;font-weight:700;line-height:1;margin-bottom:5px;}
+.sent-label.pos{color:var(--pos);}
+.sent-label.neg{color:var(--neg);}
+.sent-label.neu{color:var(--neu);}
+.sent-meaning{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:14px;}
+.bar-track{background:rgba(0,0,0,.07);border-radius:4px;height:5px;overflow:hidden;margin-bottom:6px;}
+.bar-fill{height:100%;border-radius:4px;transition:width .7s cubic-bezier(.4,0,.2,1);}
+.sent-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+
+/* MARKET CARD */
+.mkt-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;box-shadow:var(--sh);}
+.mkt-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+.mkt-name{font-size:15px;font-weight:700;line-height:1.3;}
+.mkt-ticker{font-size:11px;color:var(--muted);margin-top:2px;font-family:monospace;letter-spacing:.3px;}
+.mkt-price-block{text-align:right;}
+.mkt-price{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;}
+.mkt-change{font-size:13px;font-weight:600;margin-top:2px;}
+.mkt-change.up{color:var(--pos);}
+.mkt-change.down{color:var(--neg);}
+.mkt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.mkt-kpi{background:var(--bg);border-radius:7px;padding:10px 12px;}
+.mkt-kpi-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px;}
+.mkt-kpi-val{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;}
+.range-wrap{margin-top:4px;}
+.range-lbl{font-size:10px;color:var(--muted);display:flex;justify-content:space-between;margin-bottom:5px;font-variant-numeric:tabular-nums;}
+.range-track{background:var(--border);border-radius:4px;height:4px;position:relative;}
+.range-dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);}
+.mkt-sector{font-size:11px;color:var(--muted);margin-top:12px;}
 
 /* SIDEBAR */
-.sidebar{border-left:1px solid var(--border);background:var(--surface);padding:32px 20px;display:flex;flex-direction:column;gap:0;}
-@media(max-width:760px){.sidebar{border-left:none;border-top:1px solid var(--border);padding:24px 16px;}}
+.sidebar{border-left:1px solid var(--border);background:var(--surface);padding:28px 18px;}
+@media(max-width:800px){.sidebar{border-left:none;border-top:1px solid var(--border);padding:20px 16px;}}
 .sidebar-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:14px;}
 .hist-empty{font-size:13px;color:var(--muted);line-height:1.6;}
 .hist-list{display:flex;flex-direction:column;gap:8px;}
-.hist-item{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:default;}
-.hist-text{font-size:12px;color:var(--text);line-height:1.5;margin-bottom:6px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
-.hist-footer{display:flex;align-items:center;justify-content:space-between;}
-.hist-badge{font-size:10px;font-weight:700;letter-spacing:.3px;padding:2px 8px;border-radius:4px;text-transform:uppercase;}
+.hist-item{padding:11px 13px;border:1px solid var(--border);border-radius:8px;cursor:default;}
+.hist-text{font-size:12px;color:var(--text);line-height:1.45;margin-bottom:6px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-o
+cat > ~/folio/static/index.html << 'HTMLEOF'
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Folio</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0f7f4;--surface:#fff;--border:#d4e8e0;
+  --accent:#059669;--accent-dim:#047857;--accent-soft:#d1fae5;--accent-faint:#f0fdf9;
+  --text:#0f2b1f;--text2:#2d5a43;--muted:#6b8f7d;
+  --pos:#059669;--pos-bg:#f0fdf9;--pos-border:#a7f3d0;
+  --neg:#dc2626;--neg-bg:#fef2f2;--neg-border:#fecaca;
+  --neu:#92400e;--neu-bg:#fffbeb;--neu-border:#fde68a;
+  --font:'Inter',system-ui,sans-serif;--r:10px;
+  --sh:0 1px 3px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.04);
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0a1a13;--surface:#0f2419;--border:#1a3d28;
+  --text:#e8f5ef;--text2:#a3c9b4;--muted:#5a7a6d;
+  --accent-soft:#052e16;--accent-faint:#0a1a13;
+  --pos-bg:#052e16;--pos-border:#065f46;
+  --neg-bg:#2d0a0a;--neg-border:#7f1d1d;
+  --neu-bg:#1c1500;--neu-border:#78350f;
+  --sh:0 1px 3px rgba(0,0,0,.2),0 4px 16px rgba(0,0,0,.15);
+}}
+:root[data-theme="dark"]{
+  --bg:#0a1a13;--surface:#0f2419;--border:#1a3d28;
+  --text:#e8f5ef;--text2:#a3c9b4;--muted:#5a7a6d;
+  --accent-soft:#052e16;--accent-faint:#0a1a13;
+  --pos-bg:#052e16;--pos-border:#065f46;
+  --neg-bg:#2d0a0a;--neg-border:#7f1d1d;
+  --sh:0 1px 3px rgba(0,0,0,.2),0 4px 16px rgba(0,0,0,.15);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;}
+
+.page{display:grid;grid-template-columns:1fr 300px;min-height:100vh;}
+@media(max-width:800px){.page{grid-template-columns:1fr;}}
+
+.main{display:flex;flex-direction:column;align-items:center;padding:44px 28px;gap:20px;}
+@media(max-width:800px){.main{padding:28px 16px;}}
+
+/* LOGO */
+.logo{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:480px;}
+.logo-name{font-size:26px;font-weight:700;letter-spacing:-0.8px;}
+.logo-sub{font-size:12px;color:var(--muted);letter-spacing:.2px;}
+
+/* INPUT CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:480px;box-shadow:var(--sh);}
+.field-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px;display:block;}
+textarea{width:100%;border:1.5px solid var(--border);border-radius:7px;padding:12px 14px;font-family:var(--font);font-size:14px;line-height:1.6;color:var(--text);background:var(--bg);resize:none;outline:none;transition:border-color .18s;height:90px;}
+textarea:focus{border-color:var(--accent);}
+.input-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;min-height:18px;}
+.lang-tag{font-size:11px;color:var(--muted);font-weight:500;}
+.hint{font-size:11px;color:var(--muted);}
+.btn{width:100%;margin-top:12px;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;}
+.btn:hover{background:var(--accent-dim);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* RAPPORT */
+.rapport{display:none;width:100%;max-width:480px;display:flex;flex-direction:column;gap:14px;}
+.rapport{display:none;}
+
+/* SENTIMENT BLOCK */
+.sent-card{border-radius:var(--r);padding:20px 22px;border:1px solid transparent;}
+.sent-card.pos{background:var(--pos-bg);border-color:var(--pos-border);}
+.sent-card.neg{background:var(--neg-bg);border-color:var(--neg-border);}
+.sent-card.neu{background:var(--neu-bg);border-color:var(--neu-border);}
+.sent-label{font-size:24px;font-weight:700;line-height:1;margin-bottom:5px;}
+.sent-label.pos{color:var(--pos);}
+.sent-label.neg{color:var(--neg);}
+.sent-label.neu{color:var(--neu);}
+.sent-meaning{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:14px;}
+.bar-track{background:rgba(0,0,0,.07);border-radius:4px;height:5px;overflow:hidden;margin-bottom:6px;}
+.bar-fill{height:100%;border-radius:4px;transition:width .7s cubic-bezier(.4,0,.2,1);}
+.sent-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+
+/* MARKET CARD */
+.mkt-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;box-shadow:var(--sh);}
+.mkt-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+.mkt-name{font-size:15px;font-weight:700;line-height:1.3;}
+.mkt-ticker{font-size:11px;color:var(--muted);margin-top:2px;font-family:monospace;letter-spacing:.3px;}
+.mkt-price-block{text-align:right;}
+.mkt-price{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;}
+.mkt-change{font-size:13px;font-weight:600;margin-top:2px;}
+.mkt-change.up{color:var(--pos);}
+.mkt-change.down{color:var(--neg);}
+.mkt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.mkt-kpi{background:var(--bg);border-radius:7px;padding:10px 12px;}
+.mkt-kpi-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px;}
+.mkt-kpi-val{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;}
+.range-wrap{margin-top:4px;}
+.range-lbl{font-size:10px;color:var(--muted);display:flex;justify-content:space-between;margin-bottom:5px;font-variant-numeric:tabular-nums;}
+.range-track{background:var(--border);border-radius:4px;height:4px;position:relative;}
+.range-dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);}
+.mkt-sector{font-size:11px;color:var(--muted);margin-top:12px;}
+
+/* SIDEBAR */
+.sidebar{border-left:1px solid var(--border);background:var(--surface);padding:28px 18px;}
+@media(max-width:800px){.sidebar{border-left:none;border-top:1px solid var(--border);padding:20px 16px;}}
+.sidebar-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:14px;}
+.hist-empty{font-size:13px;color:var(--muted);line-height:1.6;}
+.hist-list{display:flex;flex-direction:column;gap:8px;}
+.hist-item{padding:11px 13px;border:1px solid var(--border);border-radius:8px;cursor:default;}
+.hist-text{font-size:12px;color:var(--text);line-height:1.45;margin-bottom:6px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.hist-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.hist-badge{font-size:10px;font-weight:700;letter-spacing:.2px;padding:2px 8px;border-radius:4px;text-transform:uppercase;flex-shrink:0;}
 .hist-badge.pos{background:var(--accent-soft);color:var(--pos);}
 .hist-badge.neg{background:#fee2e2;color:#991b1b;}
 .hist-badge.neu{background:#fef3c7;color:#92400e;}
-.hist-score{font-size:11px;color:var(--muted);font-weight:500;}
+.hist-ticker{font-size:11px;color:var(--muted);font-family:monospace;}
+.hist-score{font-size:11px;color:var(--muted);white-space:nowrap;}
 </style>
 </head>
 <body>
 <div class="page">
-
-  <!-- MAIN -->
   <div class="main">
     <div class="logo">
-      <div class="logo-mark">
-        <svg width="96" height="72" viewBox="0 0 96 72" fill="none">
-          <!-- Wallet body -->
-          <rect x="4" y="20" width="88" height="48" rx="9" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>
-          <!-- Wallet flap (top) -->
-          <path d="M4 29 Q4 20 13 20 L83 20 Q92 20 92 29 L92 34 L4 34 Z" fill="var(--accent)" opacity=".15"/>
-          <path d="M13 20 L83 20 Q92 20 92 29 L92 32 L4 32 L4 29 Q4 20 13 20Z" stroke="var(--accent)" stroke-width="1.2" fill="none" opacity=".4"/>
-          <!-- Coin pocket -->
-          <rect x="58" y="37" width="28" height="22" rx="5" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.2" opacity=".9"/>
-          <!-- Coin slot line -->
-          <line x1="66" y1="48" x2="78" y2="48" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
-          <!-- Card lines inside wallet -->
-          <rect x="10" y="39" width="34" height="3" rx="1.5" fill="var(--border)"/>
-          <rect x="10" y="46" width="24" height="3" rx="1.5" fill="var(--border)"/>
-          <rect x="10" y="53" width="28" height="3" rx="1.5" fill="var(--border)"/>
-        </svg>
-      </div>
+      <svg width="88" height="66" viewBox="0 0 88 66" fill="none">
+        <rect x="3" y="18" width="82" height="44" rx="8" fill="var(--surface)" stroke="var(--border)" stroke-width="1.4"/>
+        <path d="M11 18 L77 18 Q85 18 85 26 L85 30 L3 30 L3 26 Q3 18 11 18Z" fill="var(--accent)" opacity=".12"/>
+        <path d="M3 28 L85 28" stroke="var(--accent)" stroke-width="1" opacity=".25"/>
+        <rect x="52" y="34" width="26" height="18" rx="5" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.1" opacity=".85"/>
+        <line x1="60" y1="43" x2="70" y2="43" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" opacity=".55"/>
+        <rect x="9" y="35" width="30" height="3" rx="1.5" fill="var(--border)"/>
+        <rect x="9" y="42" width="22" height="3" rx="1.5" fill="var(--border)"/>
+        <rect x="9" y="49" width="26" height="3" rx="1.5" fill="var(--border)"/>
+      </svg>
       <div class="logo-name">Folio</div>
       <div class="logo-sub">Analyse de sentiment financier</div>
     </div>
 
     <div class="card">
       <label class="field-label">Texte à analyser</label>
-      <textarea id="inp" placeholder="Ex : Les résultats de LVMH dépassent les attentes du marché..."></textarea>
-      <div class="lang-row">
-        <span class="lang-detected" id="lang-detected"></span>
+      <textarea id="inp" placeholder="Ex : Les résultats trimestriels d'Air Liquide dépassent largement les prévisions..."></textarea>
+      <div class="input-footer">
+        <span class="lang-tag" id="lang-tag"></span>
+        <span class="hint">Ctrl+Entrée pour analyser</span>
       </div>
       <button class="btn" id="btn" onclick="analyse()">Analyser</button>
     </div>
 
-    <div class="result" id="result">
-      <div class="result-card" id="result-card">
-        <div class="result-label" id="r-label"></div>
-        <div class="result-meaning" id="r-meaning"></div>
-        <div class="result-bar-track">
-          <div class="result-bar-fill" id="r-bar"></div>
+    <div class="rapport" id="rapport">
+      <div class="sent-card" id="sent-card">
+        <div class="sent-label" id="s-label"></div>
+        <div class="sent-meaning" id="s-meaning"></div>
+        <div class="bar-track"><div class="bar-fill" id="s-bar"></div></div>
+        <div class="sent-meta">
+          <span id="s-lang"></span>
+          <span id="s-conf"></span>
         </div>
-        <div class="result-meta">
-          <span id="r-lang-line"></span>
-          <span id="r-pct"></span>
+      </div>
+      <div class="mkt-card" id="mkt-card" style="display:none">
+        <div class="mkt-header">
+          <div>
+            <div class="mkt-name" id="m-name"></div>
+            <div class="mkt-ticker" id="m-ticker"></div>
+          </div>
+          <div class="mkt-price-block">
+            <div class="mkt-price" id="m-price"></div>
+            <div class="mkt-change" id="m-change"></div>
+          </div>
         </div>
+        <div class="mkt-grid" id="m-grid"></div>
+        <div class="range-wrap" id="m-range-wrap">
+          <div class="range-lbl"><span id="m-52l"></span><span id="m-52h"></span></div>
+          <div class="range-track"><div class="range-dot" id="m-dot"></div></div>
+        </div>
+        <div class="mkt-sector" id="m-sector"></div>
       </div>
     </div>
   </div>
 
-  <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sidebar-title">Historique</div>
     <div class="hist-empty" id="hist-empty">Les analyses apparaîtront ici.</div>
     <div class="hist-list" id="hist-list"></div>
   </div>
-
 </div>
 
 <script>
-const LANG_NAMES = {
-  fr: 'Français',
-  en: 'Anglais',
-  de: 'Allemand',
-  es: 'Espagnol',
-  it: 'Italien',
-};
-
 const LABELS = {
-  positive: {
-    fr: { label: 'Positif',  meaning: 'Signal haussier, sentiment favorable aux marchés' },
-    en: { label: 'Positive', meaning: 'Bullish signal, favorable market sentiment' },
-    de: { label: 'Positiv',  meaning: 'Positives Signal, günstiges Marktsentiment' },
-    es: { label: 'Positivo', meaning: 'Señal alcista, sentimiento favorable al mercado' },
-    it: { label: 'Positivo', meaning: 'Segnale rialzista, sentiment di mercato favorevole' },
-  },
-  negative: {
-    fr: { label: 'Négatif',  meaning: 'Signal baissier, sentiment défavorable aux marchés' },
-    en: { label: 'Negative', meaning: 'Bearish signal, unfavorable market sentiment' },
-    de: { label: 'Negativ',  meaning: 'Negatives Signal, ungünstiges Marktsentiment' },
-    es: { label: 'Negativo', meaning: 'Señal bajista, sentimiento desfavorable al mercado' },
-    it: { label: 'Negativo', meaning: 'Segnale ribassista, sentiment di mercato sfavorevole' },
-  },
-  neutral: {
-    fr: { label: 'Neutre',  meaning: 'Pas de signal directionnel clair' },
-    en: { label: 'Neutral', meaning: 'No clear directional signal' },
-    de: { label: 'Neutral', meaning: 'Kein klares Richtungssignal' },
-    es: { label: 'Neutral', meaning: 'Sin señal direccional clara' },
-    it: { label: 'Neutro',  meaning: 'Nessun segnale direzionale chiaro' },
-  },
+  positive:{fr:{label:'Positif',meaning:'Signal haussier, sentiment favorable aux marchés'},en:{label:'Positive',meaning:'Bullish signal, favorable market sentiment'},de:{label:'Positiv',meaning:'Positives Signal, günstiges Marktsentiment'},es:{label:'Positivo',meaning:'Señal alcista, sentimiento favorable al mercado'},it:{label:'Positivo',meaning:'Segnale rialzista, sentiment di mercato favorevole'}},
+  negative:{fr:{label:'Négatif',meaning:'Signal baissier, sentiment défavorable aux marchés'},en:{label:'Negative',meaning:'Bearish signal, unfavorable market sentiment'},de:{label:'Negativ',meaning:'Negatives Signal, ungünstiges Marktsentiment'},es:{label:'Negativo',meaning:'Señal bajista, sentimiento desfavorable al mercado'},it:{label:'Negativo',meaning:'Segnale ribassista, sentiment di mercato sfavorevole'}},
+  neutral:{fr:{label:'Neutre',meaning:'Pas de signal directionnel clair'},en:{label:'Neutral',meaning:'No clear directional signal'},de:{label:'Neutral',meaning:'Kein klares Richtungssignal'},es:{label:'Neutral',meaning:'Sin señal direccional clara'},it:{label:'Neutro',meaning:'Nessun segnale direzionale chiaro'}},
 };
+const CONF={fr:'Niveau de confiance',en:'Confidence level',de:'Konfidenzniveau',es:'Nivel de confianza',it:'Livello di confidenza'};
+const LANG_LABEL={fr:l=>'Langue : '+{fr:'Français',en:'Anglais',de:'Allemand',es:'Espagnol',it:'Italien'}[l],en:l=>'Language: '+{fr:'French',en:'English',de:'German',es:'Spanish',it:'Italian'}[l],de:l=>'Sprache: '+{fr:'Französisch',en:'Englisch',de:'Deutsch',es:'Spanisch',it:'Italienisch'}[l],es:l=>'Idioma: '+{fr:'Francés',en:'Inglés',de:'Alemán',es:'Español',it:'Italiano'}[l],it:l=>'Lingua: '+{fr:'Francese',en:'Inglese',de:'Tedesco',es:'Spagnolo',it:'Italiano'}[l]};
+const KPI_LBL={fr:{mc:'Capitalisation',pe:'Ratio C/B',vol:'Volume',sector:'Secteur'},en:{mc:'Market Cap',pe:'P/E Ratio',vol:'Volume',sector:'Sector'},de:{mc:'Marktkapital.',pe:'KGV',vol:'Volumen',sector:'Sektor'},es:{mc:'Cap. bursátil',pe:'Ratio P/G',vol:'Volumen',sector:'Sector'},it:{mc:'Cap. di mercato',pe:'Rapporto P/U',vol:'Volume',sector:'Settore'}};
+const BAR_C={positive:'#059669',negative:'#dc2626',neutral:'#d97706'};
+const CLS={positive:'pos',negative:'neg',neutral:'neu'};
+let history=[];
 
-const CONF_LABEL = {
-  fr: 'Niveau de confiance',
-  en: 'Confidence level',
-  de: 'Konfidenzniveau',
-  es: 'Nivel de confianza',
-  it: 'Livello di confidenza',
-};
+function fmt(n,currency){if(!n)return'—';if(n>=1e12)return(n/1e12).toFixed(2)+'T '+(currency||'');if(n>=1e9)return(n/1e9).toFixed(2)+'B '+(currency||'');if(n>=1e6)return(n/1e6).toFixed(1)+'M '+(currency||'');return n.toLocaleString();}
+function fmtVol(n){if(!n)return'—';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return n;}
 
-const LANG_LABEL = {
-  fr: lang => `Langue détectée : ${LANG_NAMES[lang] || lang}`,
-  en: lang => `Detected language: ${LANG_NAMES[lang] || lang}`,
-  de: lang => `Erkannte Sprache: ${LANG_NAMES[lang] || lang}`,
-  es: lang => `Idioma detectado: ${LANG_NAMES[lang] || lang}`,
-  it: lang => `Lingua rilevata: ${LANG_NAMES[lang] || lang}`,
-};
-
-const BAR_COLOR = { positive: '#059669', negative: '#dc2626', neutral: '#d97706' };
-const CARD_CLASS = { positive: 'pos', negative: 'neg', neutral: 'neu' };
-
-let history = [];
-
-async function analyse() {
-  const text = document.getElementById('inp').value.trim();
-  if (!text) return;
-  const btn = document.getElementById('btn');
-  btn.disabled = true;
-  btn.textContent = 'Analyse en cours...';
-  try {
-    const res = await fetch('/api/sentiment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
-    });
-    if (!res.ok) throw new Error('Erreur serveur');
-    const data = await res.json();
-    showResult(data);
+async function analyse(){
+  const text=document.getElementById('inp').value.trim();
+  if(!text)return;
+  const btn=document.getElementById('btn');
+  btn.disabled=true;btn.textContent='Analyse en cours...';
+  try{
+    const res=await fetch('/api/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+    if(!res.ok)throw new Error();
+    const data=await res.json();
+    showRapport(data);
     addHistory(data);
-  } catch(e) {
-    btn.textContent = 'Erreur, réessayez';
-    setTimeout(() => { btn.disabled = false; btn.textContent = 'Analyser'; }, 2000);
+  }catch(e){
+    btn.textContent='Erreur, réessayez';
+    setTimeout(()=>{btn.disabled=false;btn.textContent='Analyser';},2000);
     return;
   }
-  btn.disabled = false;
-  btn.textContent = 'Analyser';
+  btn.disabled=false;btn.textContent='Analyser';
 }
 
-function showResult(data) {
-  const lang = data.lang || 'fr';
-  const sentimentKey = data.label;
-  const langLabels = LABELS[sentimentKey]?.[lang] || LABELS[sentimentKey]?.en || LABELS.neutral.en;
-  const pct = Math.round(data.score * 100);
-  const cls = CARD_CLASS[sentimentKey] || 'neu';
-  const confText = CONF_LABEL[lang] || CONF_LABEL.en;
-  const langLine = (LANG_LABEL[lang] || LANG_LABEL.en)(lang);
+function showRapport(d){
+  const lang=d.lang||'fr';
+  const lbl=(LABELS[d.label]||LABELS.neutral)[lang]||(LABELS[d.label]||LABELS.neutral).en;
+  const pct=Math.round(d.score*100);
+  const cls=CLS[d.label]||'neu';
 
-  const labelEl = document.getElementById('r-label');
-  labelEl.textContent = langLabels.label;
-  labelEl.className = 'result-label ' + cls;
+  document.getElementById('s-label').textContent=lbl.label;
+  document.getElementById('s-label').className='sent-label '+cls;
+  document.getElementById('s-meaning').textContent=lbl.meaning;
+  document.getElementById('s-bar').style.width=pct+'%';
+  document.getElementById('s-bar').style.background=BAR_C[d.label]||'#6b7280';
+  document.getElementById('s-lang').textContent=(LANG_LABEL[lang]||LANG_LABEL.en)(lang);
+  document.getElementById('s-conf').textContent=(CONF[lang]||CONF.en)+' : '+pct+'%';
+  document.getElementById('sent-card').className='sent-card '+cls;
+  document.getElementById('lang-tag').textContent='';
 
-  document.getElementById('r-meaning').textContent = langLabels.meaning;
-  document.getElementById('r-bar').style.width = pct + '%';
-  document.getElementById('r-bar').style.background = BAR_COLOR[sentimentKey] || '#6b7280';
-  document.getElementById('r-pct').textContent = confText + ' : ' + pct + '%';
-  document.getElementById('r-lang-line').textContent = langLine;
+  const mkt=d.market;
+  if(mkt){
+    const kl=KPI_LBL[lang]||KPI_LBL.en;
+    document.getElementById('m-name').textContent=mkt.name||d.ticker;
+    document.getElementById('m-ticker').textContent=d.ticker;
+    document.getElementById('m-price').textContent=mkt.price+' '+(mkt.currency||'');
+    const chEl=document.getElementById('m-change');
+    const sign=mkt.change_pct>=0?'+':'';
+    chEl.textContent=sign+mkt.change_pct+'%';
+    chEl.className='mkt-change '+(mkt.change_pct>=0?'up':'down');
 
-  const card = document.getElementById('result-card');
-  card.className = 'result-card ' + cls;
+    const grid=document.getElementById('m-grid');
+    grid.innerHTML=[
+      {l:kl.mc,v:fmt(mkt.market_cap,mkt.currency)},
+      {l:kl.pe,v:mkt.pe_ratio?mkt.pe_ratio.toFixed(1):'—'},
+      {l:kl.vol,v:fmtVol(mkt.volume)},
+      {l:kl.sector,v:mkt.sector||'—'},
+    ].map(k=>`<div class="mkt-kpi"><div class="mkt-kpi-lbl">${k.l}</div><div class="mkt-kpi-val">${k.v}</div></div>`).join('');
 
-  document.getElementById('lang-detected').textContent = LANG_NAMES[lang] ? 'Langue : ' + LANG_NAMES[lang] : '';
-
-  document.getElementById('result').style.display = 'block';
+    if(mkt.week52_low&&mkt.week52_high){
+      const lo=mkt.week52_low,hi=mkt.week52_high,cur=mkt.price;
+      const pos=Math.min(100,Math.max(0,((cur-lo)/(hi-lo))*100));
+      document.getElementById('m-52l').textContent=lo.toFixed(2)+' '+mkt.currency;
+      document.getElementById('m-52h').textContent=hi.toFixed(2)+' '+mkt.currency;
+      document.getElementById('m-dot').style.left=pos+'%';
+      document.getElementById('m-range-wrap').style.display='block';
+    }else{
+      document.getElementById('m-range-wrap').style.display='none';
+    }
+    document.getElementById('m-sector').textContent=mkt.sector||'';
+    document.getElementById('mkt-card').style.display='block';
+  }else{
+    document.getElementById('mkt-card').style.display='none';
+  }
+  document.getElementById('rapport').style.display='flex';
+  document.getElementById('rapport').style.flexDirection='column';
+  document.getElementById('rapport').style.gap='14px';
 }
 
-function addHistory(data) {
-  const lang = data.lang || 'fr';
-  const sentimentKey = data.label;
-  const langLabels = LABELS[sentimentKey]?.[lang] || LABELS[sentimentKey]?.en;
-  const pct = Math.round(data.score * 100);
-  const cls = CARD_CLASS[sentimentKey] || 'neu';
-
-  history.unshift({ text: data.text, label: langLabels?.label || sentimentKey, cls, score: pct });
-  if (history.length > 8) history.pop();
-
-  document.getElementById('hist-empty').style.display = 'none';
-  document.getElementById('hist-list').innerHTML = history.map(h => `
+function addHistory(d){
+  const lang=d.lang||'fr';
+  const lbl=(LABELS[d.label]||LABELS.neutral)[lang]||(LABELS[d.label]||LABELS.neutral).en;
+  const pct=Math.round(d.score*100);
+  history.unshift({text:d.text,label:lbl.label,cls:CLS[d.label]||'neu',score:pct,ticker:d.ticker});
+  if(history.length>8)history.pop();
+  document.getElementById('hist-empty').style.display='none';
+  document.getElementById('hist-list').innerHTML=history.map(h=>`
     <div class="hist-item">
       <div class="hist-text">${h.text}</div>
       <div class="hist-footer">
         <span class="hist-badge ${h.cls}">${h.label}</span>
+        ${h.ticker?`<span class="hist-ticker">${h.ticker}</span>`:''}
         <span class="hist-score">${h.score}%</span>
       </div>
     </div>`).join('');
 }
 
-document.getElementById('inp').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) analyse();
+document.getElementById('inp').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&(e.ctrlKey||e.metaKey))analyse();
 });
 </script>
 </body>
