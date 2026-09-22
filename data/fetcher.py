@@ -139,6 +139,50 @@ def _alpha_rsi(ticker: str) -> float | None:
     return None
 
 
+# Mapping suffixe ticker → pays
+TICKER_COUNTRY = {
+    ".PA": ("France", "🇫🇷"),
+    ".DE": ("Allemagne", "🇩🇪"),
+    ".AS": ("Pays-Bas", "🇳🇱"),
+    ".SW": ("Suisse", "🇨🇭"),
+    ".L":  ("Royaume-Uni", "🇬🇧"),
+    ".MC": ("Espagne", "🇪🇸"),
+    ".MI": ("Italie", "🇮🇹"),
+    ".BR": ("Belgique", "🇧🇪"),
+    ".HE": ("Finlande", "🇫🇮"),
+    ".ST": ("Suède", "🇸🇪"),
+    ".OL": ("Norvège", "🇳🇴"),
+}
+
+def _guess_country(ticker: str, yf_country: str | None) -> tuple[str, str]:
+    """Retourne (pays, drapeau) pour un ticker."""
+    if yf_country:
+        FLAGS = {
+            "United States": ("États-Unis", "🇺🇸"),
+            "France": ("France", "🇫🇷"),
+            "Germany": ("Allemagne", "🇩🇪"),
+            "Netherlands": ("Pays-Bas", "🇳🇱"),
+            "Switzerland": ("Suisse", "🇨🇭"),
+            "United Kingdom": ("Royaume-Uni", "🇬🇧"),
+            "Spain": ("Espagne", "🇪🇸"),
+            "Italy": ("Italie", "🇮🇹"),
+            "Sweden": ("Suède", "🇸🇪"),
+            "Ireland": ("Irlande", "🇮🇪"),
+            "Japan": ("Japon", "🇯🇵"),
+            "China": ("Chine", "🇨🇳"),
+            "Canada": ("Canada", "🇨🇦"),
+            "Australia": ("Australie", "🇦🇺"),
+        }
+        if yf_country in FLAGS:
+            return FLAGS[yf_country]
+    # Fallback par suffixe ticker
+    for suffix, info in TICKER_COUNTRY.items():
+        if ticker.endswith(suffix):
+            return info
+    # Tickers sans suffixe = USA par défaut
+    return ("États-Unis", "🇺🇸")
+
+
 def get_market_data(ticker: str, enrich: bool = False) -> dict | None:
     """
     Données de marché pour un ticker.
@@ -146,13 +190,23 @@ def get_market_data(ticker: str, enrich: bool = False) -> dict | None:
     """
     try:
         t = yf.Ticker(ticker)
-        hist = t.history(period="5d")
-        if hist.empty:
+        hist_5d = t.history(period="5d")
+        if hist_5d.empty:
             return None
 
-        last_price = float(hist["Close"].iloc[-1])
-        prev_price = float(hist["Close"].iloc[-2]) if len(hist) > 1 else last_price
+        last_price = float(hist_5d["Close"].iloc[-1])
+        prev_price = float(hist_5d["Close"].iloc[-2]) if len(hist_5d) > 1 else last_price
         change_pct = ((last_price - prev_price) / prev_price) * 100 if prev_price else 0
+
+        # Variation 1 mois
+        change_1m_pct = None
+        try:
+            hist_1m = t.history(period="1mo")
+            if len(hist_1m) >= 5:
+                price_1m_ago = float(hist_1m["Close"].iloc[0])
+                change_1m_pct = round(((last_price - price_1m_ago) / price_1m_ago) * 100, 2)
+        except Exception:
+            pass
 
         full = {}
         try:
@@ -160,11 +214,14 @@ def get_market_data(ticker: str, enrich: bool = False) -> dict | None:
         except Exception:
             pass
 
+        country_name, country_flag = _guess_country(ticker, full.get("country"))
+
         result = {
             "ticker": ticker,
             "name": full.get("shortName") or full.get("longName") or UNIVERSE.get(ticker, ticker),
             "price": round(last_price, 2),
             "change_pct": round(change_pct, 2),
+            "change_1m_pct": change_1m_pct,
             "currency": full.get("currency", "EUR"),
             "market_cap": full.get("marketCap"),
             "pe_ratio": full.get("trailingPE"),
@@ -177,13 +234,14 @@ def get_market_data(ticker: str, enrich: bool = False) -> dict | None:
             "avg_volume": full.get("averageVolume"),
             "sector": full.get("sector"),
             "industry": full.get("industry"),
-            "country": full.get("country"),
+            "country": country_name,
+            "country_flag": country_flag,
             "analyst_target": full.get("targetMeanPrice"),
             "recommendation": full.get("recommendationKey"),  # buy/hold/sell
             "esg_score": full.get("totalEsg"),
             # Données historiques pour graphes
-            "hist_closes": [round(float(v), 2) for v in hist["Close"].tolist()[-5:]],
-            "hist_dates": [str(d.date()) for d in hist.index.tolist()[-5:]],
+            "hist_closes": [round(float(v), 2) for v in hist_5d["Close"].tolist()[-5:]],
+            "hist_dates": [str(d.date()) for d in hist_5d.index.tolist()[-5:]],
         }
 
         # Enrichissement FMP (optionnel)

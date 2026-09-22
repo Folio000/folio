@@ -1230,15 +1230,29 @@ function assetCard(a) {
   const currency = a.currency || 'EUR';
   const price = (a.price || 0).toLocaleString('fr-FR', { minimumFractionDigits:2, maximumFractionDigits:2 });
   let meta = '';
-  if (a.market_cap) meta += `<div class="ac-row"><span class="ac-lbl">Capitalisation boursière</span><span class="ac-val">${fmtCap(a.market_cap)} ${currency}</span></div>`;
-  if (a.pe_ratio)   meta += `<div class="ac-row"><span class="ac-lbl">Cours sur bénéfice</span><span class="ac-val">${a.pe_ratio.toFixed(1)}</span></div>`;
-  if (a.week52_high && a.week52_low) meta += `<div class="ac-row"><span class="ac-lbl">Fourchette 52 semaines</span><span class="ac-val">${a.week52_low.toFixed(0)} – ${a.week52_high.toFixed(0)}</span></div>`;
-  if (a.sector)     meta += `<div class="ac-row"><span class="ac-lbl">Secteur d'activité</span><span class="ac-val">${a.sector}</span></div>`;
+  // Pays d'exposition (drapeau + nom)
+  if (a.country_flag || a.country) {
+    const flag = a.country_flag || '';
+    const country = a.country || '';
+    meta += `<div class="ac-row"><span class="ac-lbl">Pays</span><span class="ac-val">${flag} ${country}</span></div>`;
+  }
+  // Variation 1 mois
+  if (a.change_1m_pct !== null && a.change_1m_pct !== undefined) {
+    const cl1m = a.change_1m_pct >= 0 ? 'color:#16a34a' : 'color:#dc2626';
+    const s1m = a.change_1m_pct >= 0 ? '+' : '';
+    meta += `<div class="ac-row"><span class="ac-lbl">Variation 1 mois</span><span class="ac-val" style="${cl1m};font-weight:600">${s1m}${a.change_1m_pct.toFixed(2)} %</span></div>`;
+  }
+  if (a.market_cap) meta += `<div class="ac-row"><span class="ac-lbl">Capitalisation</span><span class="ac-val">${fmtCap(a.market_cap)} ${currency}</span></div>`;
+  // P/E = Price/Earnings : combien vous payez par euro/dollar de bénéfice
+  if (a.pe_ratio)   meta += `<div class="ac-row"><span class="ac-lbl" title="P/E = Prix ÷ Bénéfice. Ex: 20 = vous payez 20x les bénéfices annuels. Prudent &lt;22, Modéré &lt;30, Agressif ok jusqu\'à 60.">P/E ratio ⓘ</span><span class="ac-val">${a.pe_ratio.toFixed(1)}</span></div>`;
+  // Fourchette = prix min–max sur 52 semaines (1 an)
+  if (a.week52_high && a.week52_low) meta += `<div class="ac-row"><span class="ac-lbl" title="Prix minimum et maximum sur les 12 derniers mois.">Fourchette 52 sem. ⓘ</span><span class="ac-val">${a.week52_low.toFixed(0)} – ${a.week52_high.toFixed(0)}</span></div>`;
+  if (a.sector)     meta += `<div class="ac-row"><span class="ac-lbl">Secteur</span><span class="ac-val">${a.sector}</span></div>`;
   return `<div class="asset-card">
     <div class="ac-ticker">${a.ticker}</div>
     <div class="ac-name">${a.name || a.ticker}</div>
     <div><span class="ac-price">${price}</span><span class="ac-currency">${currency}</span></div>
-    <div class="ac-change ${c}">${sign}${(a.change_pct||0).toFixed(2)} %</div>
+    <div class="ac-change ${c}">${sign}${(a.change_pct||0).toFixed(2)} % <span style="font-size:0.75em;opacity:0.7">(aujourd'hui)</span></div>
     ${meta ? `<div class="ac-meta">${meta}</div>` : ''}
   </div>`;
 }
