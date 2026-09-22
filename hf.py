@@ -17,7 +17,7 @@ from data.fetcher import (
 from data.news import (
     detect_language, translate_to_english,
     analyze_sentiment, get_ticker_news_sentiment,
-    get_market_news,
+    get_market_news, analyze_monetary_policy,
 )
 from data.macro import get_macro_summary
 from analysis.technicals import get_technicals, format_signal
@@ -86,44 +86,125 @@ def get_market_data(ticker: str) -> dict | None:
     return _gmd(ticker)
 
 
-def _llm_call(prompt: str, max_tokens: int = 500) -> str | None:
-    """Appel LLM HuggingFace — plusieurs modèles en cascade."""
+# ══════════════════════════════════════════════════════════════════════
+# ARCHITECTURE HUGGINGFACE — 3 TYPES D'API DISTINCTS
+# ══════════════════════════════════════════════════════════════════════
+#
+# TYPE 1 — TEXT GENERATION via Chat Completions (format OpenAI-compatible)
+#   Endpoint : /hf-inference/models/{model}/v1/chat/completions
+#   Payload  : {"messages": [{"role": "user", "content": "..."}], "max_tokens": N}
+#   Modèles  : Qwen2.5, Llama-3, Phi-3, Mistral — tout modèle d'instruction
+#   Retour   : choices[0].message.content
+#
+# TYPE 2 — ZERO-SHOT CLASSIFICATION (pas besoin de fine-tuning)
+#   Endpoint : /hf-inference/models/facebook/bart-large-mnli
+#   Payload  : {"inputs": "texte", "parameters": {"candidate_labels": ["A","B"]}}
+#   Modèles  : bart-large-mnli, DeBERTa-v3-large-mnli
+#   Retour   : {labels: [...], scores: [...]} — trié par score décroissant
+#
+# TYPE 3 — TEXT CLASSIFICATION (fine-tuné sur labels fixes)
+#   Endpoint : /hf-inference/models/ProsusAI/finbert
+#   Payload  : {"inputs": "texte en anglais"}
+#   Modèles  : finbert, roberta-sentiment
+#   Retour   : [[{label, score}, ...]] — labels fixes du modèle
+#
+# ══════════════════════════════════════════════════════════════════════
+
+
+# ── TYPE 1 : LLM via Chat Completions (OpenAI-compatible) ────────────
+def _llm_chat(messages: list[dict], max_tokens: int = 500, temperature: float = 0.3) -> str | None:
+    """
+    Appel LLM HuggingFace via l'API chat/completions (format OpenAI-compatible).
+    Tous les modèles d'instruction modernes supportent ce format sur HF router.
+
+    Cascade de modèles — du plus puissant au plus léger :
+    1. Qwen2.5-72B  : raisonnement financier excellent, multilingual, HF Pro
+    2. Qwen2.5-7B   : bon équilibre qualité/latence, fonctionne sur free tier
+    3. Phi-3.5-mini : 3.8B compact, raisonnement structuré, très rapide
+    4. Llama-3.2-3B : plus petit, dernier recours avant fallback rule-based
+
+    Format payload unifié (même pour tous les modèles ci-dessus) :
+    {
+        "messages": [
+            {"role": "system", "content": "Instructions système..."},
+            {"role": "user",   "content": "Question de l'utilisateur..."}
+        ],
+        "max_tokens": 500,
+        "temperature": 0.3,
+        "stream": False
+    }
+    """
     models = [
-        "mistralai/Mistral-7B-Instruct-v0.3",
-        "mistralai/Mistral-7B-Instruct-v0.2",
-        "HuggingFaceH4/zephyr-7b-beta",
-        "tiiuae/falcon-7b-instruct",
+        "Qwen/Qwen2.5-72B-Instruct",        # Meilleur raisonnement, HF Pro
+        "Qwen/Qwen2.5-7B-Instruct",          # Bon free tier, multilingual
+        "microsoft/Phi-3.5-mini-instruct",    # 3.8B, raisonnement compact
+        "meta-llama/Llama-3.2-3B-Instruct",  # Léger, dernier recours LLM
     ]
+
     for model in models:
         try:
+            url = f"https://router.huggingface.co/hf-inference/models/{model}/v1/chat/completions"
             r = requests.post(
-                f"https://router.huggingface.co/hf-inference/models/{model}",
-                headers=HF_HEADERS,
+                url,
+                headers={**HF_HEADERS, "Content-Type": "application/json"},
                 json={
-                    "inputs": prompt,
-                    "parameters": {
-                        "max_new_tokens": max_tokens,
-                        "temperature": 0.3,
-                        "return_full_text": False,
-                        "do_sample": True,
-                    }
+                    "messages": messages,
+                    "max_tokens": max_tokens,
+                    "temperature": temperature,
+                    "stream": False,
                 },
-                timeout=45,
+                timeout=50,
             )
-            if r.status_code != 200:
+            if r.status_code == 200:
+                data = r.json()
+                content = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                if content and len(content) > 80:
+                    return content
+            # 503 = modèle en cours de chargement → passer au suivant
+            elif r.status_code in (503, 429):
                 continue
-            result = r.json()
-            if isinstance(result, list) and result:
-                text = result[0].get("generated_text", "").strip()
-            elif isinstance(result, dict):
-                text = result.get("generated_text", "").strip()
-            else:
-                continue
-            # Vérifier que c'est une vraie réponse (pas juste le prompt répété)
-            if text and len(text) > 80 and not text.startswith("<s>"):
-                return text
         except Exception:
             continue
+    return None
+
+
+# ── TYPE 2 : Zéro-shot classification (BART) ─────────────────────────
+def _classify_zero_shot(text: str, candidate_labels: list[str]) -> str | None:
+    """
+    Classification zéro-shot via facebook/bart-large-mnli.
+    Aucun fine-tuning requis — le modèle comprend les labels en langage naturel.
+
+    Format payload DIFFÉRENT des LLMs :
+    {
+        "inputs": "Je veux investir 500€ en bourse",
+        "parameters": {
+            "candidate_labels": ["investir un budget", "analyser une action", ...],
+            "multi_label": False  # une seule classe gagnante
+        }
+    }
+    Retour : {"labels": ["investir un budget", ...], "scores": [0.87, ...]}
+    → labels[0] est le plus probable
+    """
+    try:
+        r = requests.post(
+            "https://router.huggingface.co/hf-inference/models/facebook/bart-large-mnli",
+            headers=HF_HEADERS,
+            json={
+                "inputs": text[:512],
+                "parameters": {
+                    "candidate_labels": candidate_labels,
+                    "multi_label": False,
+                }
+            },
+            timeout=20,
+        )
+        if r.status_code == 200:
+            result = r.json()
+            labels = result.get("labels", [])
+            if labels:
+                return labels[0]  # Label avec le score le plus élevé
+    except Exception:
+        pass
     return None
 
 
@@ -213,9 +294,36 @@ INTENT_PATTERNS = {
 
 def _detect_intent(question: str, lang: str) -> str:
     """
-    Modèle 1 — Détection d'intention (rule-based rapide).
-    Retourne : invest_budget | analyze_ticker | compare | portfolio_review | general_info
+    Modèle 1 — Détection d'intention (3 couches).
+
+    Stratégie :
+    1. BART zero-shot (TYPE 2 HF) : classification en langage naturel, sans règles
+    2. Rule-based (fallback rapide) : regex patterns, toujours disponible
+
+    BART comprend l'intention même dans des formulations nouvelles ou complexes.
+    Le rule-based garantit une réponse même si HF est indisponible.
     """
+    # ── Tentative BART zero-shot (comprend le contexte mieux que les regex) ──
+    # Labels en anglais = meilleure performance BART (entraîné sur MNLI anglais)
+    bart_labels = [
+        "invest a specific budget amount in stocks or ETFs",
+        "analyze or get details about a specific stock ticker",
+        "compare two or more investment options",
+        "review my personal investment portfolio",
+        "general question about markets or finance",
+    ]
+    bart_to_intent = {
+        "invest a specific budget amount in stocks or ETFs": "invest_budget",
+        "analyze or get details about a specific stock ticker": "analyze_ticker",
+        "compare two or more investment options": "compare",
+        "review my personal investment portfolio": "portfolio_review",
+        "general question about markets or finance": "general_info",
+    }
+    bart_result = _classify_zero_shot(question, bart_labels)
+    if bart_result and bart_result in bart_to_intent:
+        return bart_to_intent[bart_result]
+
+    # ── Fallback rule-based (regex, instantané) ──────────────────────────────
     q = question.lower()
     for intent, patterns in INTENT_PATTERNS.items():
         for p in patterns:
@@ -272,10 +380,20 @@ def _filter_by_criteria(assets: list[dict], profile_key: str) -> list[dict]:
 
 
 # ── Modèle 2 : Analyse marché ────────────────────────────────────────
-def _llm_analyze_market(assets: list[dict], ticker: str | None, profile_key: str, lang: str) -> str | None:
+def _llm_analyze_market(
+    assets: list[dict], ticker: str | None, profile_key: str, lang: str,
+    monetary_stance: str = "neutral"
+) -> str | None:
     """
     Modèle 2 — Analyse des données marché pour le profil.
-    Utilise Mistral-7B pour synthétiser les signaux.
+    Utilise l'API chat/completions HF (format OpenAI-compatible).
+
+    Reçoit en entrée :
+    - Les actifs filtrés et scorés selon le profil (P/E, dividende, secteur, momentum)
+    - La stance de politique monétaire F1 (hawkish/dovish/neutral)
+
+    Rôle : synthétiser les signaux quantitatifs en analyse qualitative,
+    identifier les 2-3 actifs les plus pertinents pour ce profil précis.
     """
     criteria = PROFILE_CRITERIA.get(profile_key, PROFILE_CRITERIA["modéré"])
     criteria_desc = criteria["description"].get(lang, criteria["description"]["fr"])
@@ -286,75 +404,119 @@ def _llm_analyze_market(assets: list[dict], ticker: str | None, profile_key: str
         div_str = f"div={a['dividend_yield']*100:.1f}%" if a.get("dividend_yield") else ""
         m1 = f"1m={a['change_1m_pct']:+.1f}%" if a.get("change_1m_pct") is not None else ""
         country = a.get("country", "")
-        lines.append(f"  {a['name']} ({a['ticker']}): {a['price']} {pe_str} {div_str} {m1} {country}")
+        lines.append(f"  {a['name']} ({a['ticker']}): {a['price']} | {pe_str} {div_str} {m1} | {country}")
 
     market_ctx = "\n".join(lines)
 
-    prompt = (
-        f"<s>[INST] Tu es un analyste financier. Profil de risque cible : {profile_key} ({criteria_desc}).\n\n"
-        f"Données marché :\n{market_ctx}\n\n"
-        f"En 2-3 lignes, identifie les 2 actifs les plus adaptés à ce profil et explique pourquoi "
-        f"(critères : P/E, dividende, momentum 1 mois, secteur). {_lang_instruction(lang)} [/INST]"
-    )
-    return _llm_call(prompt, max_tokens=200)
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                f"You are a financial market analyst specializing in portfolio management. "
+                f"Current monetary policy stance: {monetary_stance} (hawkish=restrictive, dovish=accommodative). "
+                f"Answer in this language: {lang}. Be direct and structured, max 3 sentences."
+            )
+        },
+        {
+            "role": "user",
+            "content": (
+                f"Target risk profile: {profile_key} — {criteria_desc}\n\n"
+                f"Market data (pre-filtered and scored for this profile):\n{market_ctx}\n\n"
+                f"Identify the 2 most suitable assets for this profile. "
+                f"Justify based on: P/E ratio, dividend yield, 1-month momentum, sector, "
+                f"and current monetary policy stance ({monetary_stance})."
+            )
+        }
+    ]
+    return _llm_chat(messages, max_tokens=220, temperature=0.25)
 
 
 # ── Modèle 3 : Génération de réponse adaptée au profil ───────────────
 def _llm_profile_response(
     question: str, assets: list[dict], budget: int | None, profile_key: str,
     lang: str, intent: str, macro_ctx: str, tech_block: str, portfolio_block: str,
-    analysis_text: str
+    analysis_text: str, monetary_stance: str = "neutral",
+    news_topic: str = "general", news_consensus: float = 0.0,
 ) -> str | None:
     """
     Modèle 3 — Génération de la réponse finale adaptée au profil.
-    Reçoit l'analyse du Modèle 2 comme contexte enrichi.
+
+    Reçoit l'ensemble du contexte enrichi :
+    - Analyse du Modèle 2 (actifs les plus adaptés)
+    - F1 : stance politique monétaire (hawkish/dovish/neutral)
+    - F2 : type d'événement dominant dans les news (earnings/M&A/regulatory...)
+    - F3 : niveau de consensus entre modèles de sentiment
+
+    Rôle : synthèse finale + conseil personnalisé au profil, budget, et langue.
     """
     criteria = PROFILE_CRITERIA.get(profile_key, PROFILE_CRITERIA["modéré"])
     criteria_desc = criteria["description"].get(lang, criteria["description"]["fr"])
 
-    budget_block = ""
-    if budget:
-        budget_block = (
-            f"\n⚠️ BUDGET STRICT : {budget}€ MAXIMUM. "
-            f"Ne propose JAMAIS une action à acheter entière si son prix > {budget}€. "
-            f"Pour les petits budgets, précise les actions fractionnées (Trade Republic, Revolut)."
-        )
-
-    intent_map = {
-        "invest_budget": "L'utilisateur veut investir une somme précise.",
-        "analyze_ticker": "L'utilisateur veut analyser une action spécifique.",
-        "compare": "L'utilisateur veut comparer plusieurs options.",
-        "portfolio_review": "L'utilisateur veut un avis sur son portefeuille.",
-        "general_info": "Question générale sur les marchés.",
-    }
-    intent_desc = intent_map.get(intent, "")
-
     top_assets = "\n".join(
         f"  • {a['name']} ({a['ticker']}): {a['price']} "
         f"{'| P/E=' + str(round(a['pe_ratio'],1)) if a.get('pe_ratio') else ''} "
-        f"{'| +' if a.get('change_1m_pct', 0) >= 0 else '|'}{a.get('change_1m_pct', 'N/A')}% 1m "
-        f"| {a.get('country_flag', '')} {a.get('country', '')}"
+        f"| {'+' if (a.get('change_1m_pct') or 0) >= 0 else ''}{a.get('change_1m_pct', 'N/A')}% (1m) "
+        f"| {a.get('country', '')}"
         for a in assets[:4]
     )
 
-    analysis_block = f"\nAnalyse préliminaire : {analysis_text}" if analysis_text else ""
+    # Construire le contexte enrichi pour le LLM
+    context_parts = []
+    if macro_ctx:
+        context_parts.append(f"Macro context: {macro_ctx[:200]}")
+    if monetary_stance != "neutral":
+        context_parts.append(f"Central bank stance: {monetary_stance} (important for risk calibration)")
+    if news_topic and news_topic != "general":
+        context_parts.append(f"Dominant news type: {news_topic} (consensus: {round(news_consensus*100)}%)")
+    if portfolio_block:
+        context_parts.append(f"User portfolio:\n{portfolio_block}")
+    if tech_block:
+        context_parts.append(f"Technical signals: {tech_block}")
+    if analysis_text:
+        context_parts.append(f"Preliminary market analysis: {analysis_text}")
 
-    prompt = (
-        f"<s>[INST] Tu es Folio, conseiller financier expert en investissement.\n"
-        f"Profil client : {profile_key} — {criteria_desc}\n"
-        f"Intention : {intent_desc}{budget_block}\n\n"
-        f"Question : \"{question}\"\n\n"
-        f"Actifs recommandés pour ce profil :\n{top_assets}\n"
-        f"Contexte macro : {macro_ctx[:180]}\n"
-        + (portfolio_block + "\n" if portfolio_block else "")
-        + (tech_block + "\n" if tech_block else "")
-        + analysis_block
-        + f"\n\nRéponds directement avec 3-5 lignes. "
-        f"Cite les actifs avec montants précis si budget donné. "
-        f"Mentionne le pays d'exposition et la performance 1 mois. "
-        f"{_lang_instruction(lang)} [/INST]"
-    )
-    return _llm_call(prompt, max_tokens=400)
+    budget_instruction = ""
+    if budget:
+        budget_instruction = (
+            f"\nSTRICT BUDGET: {budget}€ MAXIMUM. "
+            f"NEVER suggest buying a full share if its price exceeds {budget}€. "
+            f"For small budgets, recommend fractional shares (Trade Republic, Revolut) "
+            f"with exact allocation amounts."
+        )
+
+    intent_descriptions = {
+        "invest_budget": "User wants to invest a specific amount.",
+        "analyze_ticker": "User wants a detailed analysis of a specific stock.",
+        "compare": "User wants to compare multiple investment options.",
+        "portfolio_review": "User wants feedback on their existing portfolio.",
+        "general_info": "General market or finance question.",
+    }
+
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                f"You are Folio, an expert financial advisor. "
+                f"Always respond in this language: {lang}. "
+                f"Be direct, structured, and specific. Use bullet points when listing assets. "
+                f"Always mention country exposure and 1-month performance when discussing assets."
+            )
+        },
+        {
+            "role": "user",
+            "content": (
+                f"Client profile: {profile_key} — {criteria_desc}\n"
+                f"Intent: {intent_descriptions.get(intent, '')}{budget_instruction}\n\n"
+                f"Question: \"{question}\"\n\n"
+                f"Recommended assets for this profile (pre-scored):\n{top_assets}\n\n"
+                + "\n".join(context_parts)
+                + "\n\nProvide a direct, personalized response of 4-6 lines. "
+                f"If a budget is given, include exact allocation amounts per asset. "
+                f"Justify choices using the financial data provided."
+            )
+        }
+    ]
+    return _llm_chat(messages, max_tokens=450, temperature=0.3)
 
 
 def _smart_advisor(
@@ -688,9 +850,18 @@ def advise(
         f_snap  = ex.submit(get_universe_snapshot, 20)
         f_macro = ex.submit(get_macro_summary, lang)
         f_news  = ex.submit(get_market_news, lang, 4)
-        snapshot        = f_snap.result()
-        macro_ctx       = f_macro.result()
+        snapshot         = f_snap.result()
+        macro_ctx        = f_macro.result()
         market_news_list = f_news.result()
+
+    # ── F1 : FOMC-RoBERTa — stance politique monétaire ───────────────
+    # Analyse le contexte macro pour déterminer si Fed/BCE est hawkish ou dovish.
+    # Ce signal influence directement les recommandations :
+    # hawkish → prudence sur les actions de croissance (taux élevés = DCF défavorable)
+    # dovish  → favorable aux actifs risqués et aux actions de croissance
+    monetary_result = analyze_monetary_policy(macro_ctx, lang)
+    monetary_stance = monetary_result.get("stance", "neutral")
+    monetary_display = monetary_result.get("label_display", "")
 
     # Ticker mentionné dans la question
     ticker_mentioned = extract_ticker(question)
@@ -731,9 +902,13 @@ def advise(
             tech_block += f" | {news_sentiment.get('summary', '')[:100]}"
 
     # Tentative Modèle 2 : analyse LLM des marchés
+    # Intègre la stance monétaire F1 dans le raisonnement
     market_analysis = None
     try:
-        market_analysis = _llm_analyze_market(scored_assets, ticker_mentioned, profile_key, lang)
+        market_analysis = _llm_analyze_market(
+            scored_assets, ticker_mentioned, profile_key, lang,
+            monetary_stance=monetary_stance
+        )
     except Exception:
         pass
 
@@ -748,6 +923,10 @@ def advise(
     )
 
     # ── Modèle 3 : Réponse finale adaptée au profil ──────────────────
+    # Reçoit TOUS les signaux enrichis : F1 (monetary), F2 (topic), F3 (consensus)
+    news_topic = news_sentiment.get("main_topic", "general") if news_sentiment else "general"
+    news_consensus = news_sentiment.get("consensus_rate", 0.0) if news_sentiment else 0.0
+
     llm_final = None
     try:
         llm_final = _llm_profile_response(
@@ -761,6 +940,9 @@ def advise(
             tech_block=tech_block,
             portfolio_block=portfolio_block,
             analysis_text=market_analysis or "",
+            monetary_stance=monetary_stance,
+            news_topic=news_topic,
+            news_consensus=news_consensus,
         )
     except Exception:
         pass
@@ -788,6 +970,11 @@ def advise(
         "mentioned_assets": mentioned[:4],
         "news_sentiment": news_sentiment,
         "macro_context": macro_ctx,
+        # F1 : stance politique monétaire Fed/BCE
+        "monetary_policy": {
+            "stance": monetary_stance,
+            "display": monetary_display,
+        },
         "technical": technical if technical and "error" not in technical else None,
         "portfolio_analysis": portfolio_analysis,
         "profile_criteria": PROFILE_CRITERIA.get(profile_key, {}),

@@ -183,6 +183,7 @@ def get_macro_data() -> dict:
 def get_macro_summary(lang: str = "fr") -> str:
     """
     Résumé macro court dans la langue demandée.
+    N'affiche que les données disponibles (filtre les None).
     Utilisé comme contexte dans le prompt LLM.
     """
     macro = get_macro_data()
@@ -190,44 +191,59 @@ def get_macro_summary(lang: str = "fr") -> str:
     eu = macro["eu"]
     yc = macro["yield_curve"]
 
-    if lang == "fr":
-        return (
-            f"Macro : Fed={us.get('fed_rate','?')}%, "
-            f"US10y={us.get('yield_10y','?')}%, "
-            f"VIX={us.get('vix','?')}, "
-            f"Courbe={yc}, "
-            f"BCE={eu.get('ecb_rate','?')}%. "
-            f"{macro['context']}"
-        )
-    elif lang == "de":
-        return (
-            f"Makro: Fed={us.get('fed_rate','?')}%, "
-            f"US10J={us.get('yield_10y','?')}%, "
-            f"VIX={us.get('vix','?')}, "
-            f"Zinskurve={yc}, "
-            f"EZB={eu.get('ecb_rate','?')}%."
-        )
-    elif lang == "es":
-        return (
-            f"Macro: Fed={us.get('fed_rate','?')}%, "
-            f"US10a={us.get('yield_10y','?')}%, "
-            f"VIX={us.get('vix','?')}, "
-            f"Curva={yc}, "
-            f"BCE={eu.get('ecb_rate','?')}%."
-        )
-    elif lang == "it":
-        return (
-            f"Macro: Fed={us.get('fed_rate','?')}%, "
-            f"US10a={us.get('yield_10y','?')}%, "
-            f"VIX={us.get('vix','?')}, "
-            f"Curva={yc}, "
-            f"BCE={eu.get('ecb_rate','?')}%."
-        )
-    else:  # en
-        return (
-            f"Macro: Fed={us.get('fed_rate','?')}%, "
-            f"US10Y={us.get('yield_10y','?')}%, "
-            f"VIX={us.get('vix','?')}, "
-            f"Yield curve={yc}, "
-            f"ECB={eu.get('ecb_rate','?')}%."
-        )
+    # ── Construire uniquement avec les données disponibles ────────────
+    parts = []
+
+    # Taux Fed
+    fed = us.get("fed_rate")
+    if fed is not None:
+        parts.append({"fr": f"Fed={fed}%", "en": f"Fed={fed}%", "de": f"Fed={fed}%", "es": f"Fed={fed}%", "it": f"Fed={fed}%"}.get(lang, f"Fed={fed}%"))
+
+    # US 10 ans
+    y10 = us.get("yield_10y")
+    if y10 is not None:
+        parts.append({"fr": f"US 10 ans={y10}%", "en": f"US10Y={y10}%", "de": f"US 10J={y10}%", "es": f"US 10a={y10}%", "it": f"US 10a={y10}%"}.get(lang, f"US10Y={y10}%"))
+
+    # Courbe des taux (seulement si on a les données)
+    if yc != "inconnue":
+        curve_labels = {
+            "normale":  {"fr": "courbe normale", "en": "normal curve", "de": "normale Kurve", "es": "curva normal", "it": "curva normale"},
+            "inversée": {"fr": "courbe inversée", "en": "inverted curve", "de": "invertierte Kurve", "es": "curva invertida", "it": "curva invertita"},
+            "plate":    {"fr": "courbe plate", "en": "flat curve", "de": "flache Kurve", "es": "curva plana", "it": "curva piatta"},
+        }
+        label = curve_labels.get(yc, {}).get(lang, yc)
+        parts.append(label)
+
+    # VIX
+    vix = us.get("vix")
+    if vix is not None:
+        parts.append(f"VIX={vix}")
+
+    # BCE
+    ecb = eu.get("ecb_rate")
+    if ecb is not None:
+        parts.append({"fr": f"BCE={ecb}%", "en": f"ECB={ecb}%", "de": f"EZB={ecb}%", "es": f"BCE={ecb}%", "it": f"BCE={ecb}%"}.get(lang, f"ECB={ecb}%"))
+
+    # Bund 10 ans
+    bund = eu.get("bund_10y")
+    if bund is not None:
+        parts.append({"fr": f"Bund 10 ans={bund}%", "en": f"Bund 10Y={bund}%", "de": f"Bund 10J={bund}%", "es": f"Bund 10a={bund}%", "it": f"Bund 10a={bund}%"}.get(lang, f"Bund={bund}%"))
+
+    if not parts:
+        no_data = {
+            "fr": "Données macro temporairement indisponibles.",
+            "en": "Macro data temporarily unavailable.",
+            "de": "Makrodaten vorübergehend nicht verfügbar.",
+            "es": "Datos macro temporalmente no disponibles.",
+            "it": "Dati macro temporaneamente non disponibili.",
+        }
+        return no_data.get(lang, no_data["en"])
+
+    prefix = {"fr": "Macro : ", "en": "Macro: ", "de": "Makro: ", "es": "Macro: ", "it": "Macro: "}.get(lang, "Macro: ")
+    summary = prefix + ", ".join(parts) + "."
+
+    # Ajouter le contexte interprétatif si disponible
+    if macro.get("context"):
+        summary += " " + macro["context"]
+
+    return summary

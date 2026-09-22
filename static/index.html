@@ -1215,12 +1215,35 @@ function renderResult(el, q, data) {
   el.innerHTML = html;
 }
 
+function mdToHtml(s) {
+  return s
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/`(.+?)`/g,'<code>$1</code>');
+}
+
 function parseAnswer(text) {
   return text.split('\n').map(line => {
     const t = line.trim();
     if (!t) return '<br>';
-    if (/^[•\-\*]/.test(t)) return `<div class="answer-bullet">${t.replace(/^[•\-\*]\s*/,'')}</div>`;
-    return `<div class="answer-line">${t}</div>`;
+    // Ligne numérotée : 1. texte
+    if (/^\d+\.\s/.test(t)) {
+      const content = mdToHtml(t.replace(/^\d+\.\s*/,''));
+      return `<div class="answer-bullet" style="list-style-type:decimal">${content}</div>`;
+    }
+    // Bullet : • - * texte
+    if (/^[•\-\*]\s/.test(t)) {
+      const content = mdToHtml(t.replace(/^[•\-\*]\s*/,''));
+      return `<div class="answer-bullet">${content}</div>`;
+    }
+    // Titre : ## texte
+    if (/^#{1,3}\s/.test(t)) {
+      const content = mdToHtml(t.replace(/^#{1,3}\s*/,''));
+      return `<div class="answer-line" style="font-weight:700;font-size:1.05em;margin-top:10px">${content}</div>`;
+    }
+    return `<div class="answer-line">${mdToHtml(t)}</div>`;
   }).join('');
 }
 
