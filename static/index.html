@@ -4,103 +4,312 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Folio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #080808;
+      --surface: #111111;
+      --border: #1e1e1e;
+      --text: #f0f0f0;
+      --muted: #555;
+      --positive: #16a34a;
+      --positive-bg: #052010;
+      --negative: #dc2626;
+      --negative-bg: #200505;
+      --neutral: #ca8a04;
+      --neutral-bg: #1a1500;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #0f0f0f;
-      color: #f0f0f0;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 24px 40px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+    .logo span { color: var(--muted); font-weight: 300; }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 40px 24px;
     }
+    .hero {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .hero h1 {
+      font-size: 42px;
+      font-weight: 700;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(90deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p { color: var(--muted); font-size: 16px; }
     .card {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 12px;
-      padding: 40px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
       width: 100%;
-      max-width: 560px;
+      max-width: 620px;
     }
-    h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
-    p { color: #888; font-size: 14px; margin-bottom: 28px; }
+    .input-wrap { position: relative; }
     textarea {
       width: 100%;
-      background: #111;
-      border: 1px solid #333;
-      border-radius: 8px;
-      color: #f0f0f0;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
       font-size: 15px;
-      padding: 14px;
-      resize: vertical;
-      min-height: 100px;
+      line-height: 1.6;
+      padding: 16px;
+      resize: none;
+      height: 120px;
       outline: none;
+      transition: border-color 0.2s;
     }
-    textarea:focus { border-color: #555; }
+    textarea:focus { border-color: #333; }
+    textarea::placeholder { color: var(--muted); }
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .lang-badge {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #333;
+      transition: background 0.3s;
+    }
+    .dot.fr { background: #60a5fa; }
+    .dot.en { background: #a78bfa; }
     button {
-      margin-top: 16px;
-      width: 100%;
-      background: #f0f0f0;
-      color: #0f0f0f;
+      flex: 1;
+      background: var(--text);
+      color: var(--bg);
       border: none;
       border-radius: 8px;
-      padding: 14px;
-      font-size: 15px;
+      padding: 13px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
+      transition: opacity 0.2s;
     }
-    button:hover { background: #ddd; }
-    button:disabled { background: #333; color: #666; cursor: not-allowed; }
+    button:hover { opacity: 0.85; }
+    button:disabled { opacity: 0.3; cursor: not-allowed; }
     .result {
-      margin-top: 24px;
-      padding: 20px;
-      border-radius: 8px;
+      margin-top: 20px;
+      border-radius: 12px;
+      padding: 24px;
       display: none;
+      animation: fadeIn 0.3s ease;
     }
-    .positive { background: #0d2b1a; border: 1px solid #1a5c35; }
-    .negative { background: #2b0d0d; border: 1px solid #5c1a1a; }
-    .neutral  { background: #1a1a0d; border: 1px solid #5c5c1a; }
-    .label { font-size: 18px; font-weight: 700; text-transform: capitalize; }
-    .score { font-size: 13px; color: #888; margin-top: 4px; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .result.positive { background: var(--positive-bg); border: 1px solid #0a3d1a; }
+    .result.negative { background: var(--negative-bg); border: 1px solid #3d0a0a; }
+    .result.neutral  { background: var(--neutral-bg);  border: 1px solid #3d3000; }
+    .result-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .sentiment-label { font-size: 20px; font-weight: 700; text-transform: capitalize; }
+    .sentiment-label.positive { color: #4ade80; }
+    .sentiment-label.negative { color: #f87171; }
+    .sentiment-label.neutral  { color: #fbbf24; }
+    .score-pill {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+    .positive .score-pill { background: #0a3d1a; color: #4ade80; }
+    .negative .score-pill { background: #3d0a0a; color: #f87171; }
+    .neutral  .score-pill { background: #3d3000; color: #fbbf24; }
+    .bar-track {
+      height: 4px;
+      background: #ffffff10;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+    }
+    .positive .bar-fill { background: #4ade80; }
+    .negative .bar-fill { background: #f87171; }
+    .neutral  .bar-fill { background: #fbbf24; }
+    .history {
+      margin-top: 32px;
+      width: 100%;
+      max-width: 620px;
+    }
+    .history-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      animation: fadeIn 0.2s ease;
+    }
+    .history-text { color: #aaa; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 16px; }
+    .history-badge {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 3px 10px;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+    .history-badge.positive { background: #052010; color: #4ade80; }
+    .history-badge.negative { background: #200505; color: #f87171; }
+    .history-badge.neutral  { background: #1a1500; color: #fbbf24; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Folio</h1>
-    <p>Analyse le sentiment financier d'un texte avec l'IA</p>
-    <textarea id="input" placeholder="Ex: Apple stock surges after record profits..."></textarea>
-    <button id="btn" onclick="analyze()">Analyser</button>
-    <div class="result" id="result">
-      <div class="label" id="label"></div>
-      <div class="score" id="score"></div>
+  <header>
+    <div style="display:flex;align-items:center;gap:10px;">
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2" y="8" width="28" height="20" rx="3" fill="#059669"/>
+    <rect x="2" y="12" width="28" height="4" fill="#047857"/>
+    <rect x="20" y="16" width="8" height="8" rx="2" fill="#065f46"/>
+    <circle cx="24" cy="20" r="2" fill="#6ee7b7"/>
+    <rect x="5" y="5" width="22" height="6" rx="2" fill="#34d399" opacity="0.5"/>
+  </svg>
+  <div class="logo">Folio <span>/ Sentiment</span></div>
+</div>
+  </header>
+  <main>
+    <div class="hero">
+      <h1>Analyse le sentiment<br><em>financier en temps réel</em></h1>
+      <p>IA entraînée sur la finance — anglais et français</p>
     </div>
-  </div>
+    <div class="card">
+      <textarea id="input" placeholder="Ex: Apple pulvérise ses records de bénéfices ce trimestre..."></textarea>
+      <div class="actions">
+        <div class="lang-badge">
+          <div class="dot" id="langdot"></div>
+          <span id="langtext">—</span>
+        </div>
+        <button id="btn" onclick="analyze()">Analyser</button>
+      </div>
+      <div class="result" id="result">
+        <div class="result-top">
+          <div class="sentiment-label" id="label"></div>
+          <div class="score-pill" id="scorepill"></div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" id="bar" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="history" id="history" style="display:none">
+      <div class="history-title">Historique</div>
+      <div id="history-list"></div>
+    </div>
+  </main>
 
   <script>
+    const input = document.getElementById('input');
+    const langdot = document.getElementById('langdot');
+    const langtext = document.getElementById('langtext');
+    const history = [];
+
+    function detectLang(text) {
+      const fr = /\b(le|la|les|de|du|des|un|une|est|et|en|au|aux|pour|avec|sur|par|pas|ne|que|qui|dans|ce|se|il|elle|nous|vous|ils|elles|son|sa|ses|mon|ma|mes|ton|ta|tes|leur|leurs)\b/gi;
+      const matches = (text.match(fr) || []).length;
+      return matches >= 2 ? 'fr' : 'en';
+    }
+
+    input.addEventListener('input', () => {
+      const text = input.value.trim();
+      if (text.length < 4) { langdot.className = 'dot'; langtext.textContent = '—'; return; }
+      const lang = detectLang(text);
+      langdot.className = 'dot ' + lang;
+      langtext.textContent = lang === 'fr' ? 'Français' : 'English';
+    });
+
     async function analyze() {
-      const text = document.getElementById('input').value.trim();
+      const text = input.value.trim();
       if (!text) return;
       const btn = document.getElementById('btn');
       btn.disabled = true;
-      btn.textContent = 'Analyse en cours...';
+      btn.textContent = 'Analyse…';
       try {
-        const res = await fetch(`/api/sentiment?text=${encodeURIComponent(text)}`, {
-          method: 'POST'
-        });
+        const res = await fetch(`/api/sentiment?text=${encodeURIComponent(text)}`, { method: 'POST' });
         const data = await res.json();
         const result = document.getElementById('result');
+        const pct = Math.round(data.score * 100);
         result.className = 'result ' + data.label;
         result.style.display = 'block';
+        document.getElementById('label').className = 'sentiment-label ' + data.label;
         document.getElementById('label').textContent = data.label;
-        document.getElementById('score').textContent = `Confiance : ${Math.round(data.score * 100)}%`;
-      } catch (e) {
-        alert('Erreur de connexion au serveur');
-      }
+        document.getElementById('scorepill').textContent = pct + '% confiance';
+        setTimeout(() => { document.getElementById('bar').style.width = pct + '%'; }, 50);
+        history.unshift({ text: text.slice(0, 60) + (text.length > 60 ? '…' : ''), label: data.label, score: pct });
+        if (history.length > 5) history.pop();
+        renderHistory();
+      } catch(e) { alert('Erreur serveur'); }
       btn.disabled = false;
       btn.textContent = 'Analyser';
     }
+
+    function renderHistory() {
+      const el = document.getElementById('history');
+      const list = document.getElementById('history-list');
+      if (history.length === 0) { el.style.display = 'none'; return; }
+      el.style.display = 'block';
+      list.innerHTML = history.map(h => `
+        <div class="history-item">
+          <div class="history-text">${h.text}</div>
+          <div class="history-badge ${h.label}">${h.label} ${h.score}%</div>
+        </div>
+      `).join('');
+    }
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) analyze();
+    });
   </script>
 </body>
 </html>
