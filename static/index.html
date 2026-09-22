@@ -99,5 +99,185 @@ textarea:focus{border-color:var(--accent);}
           <!-- Wallet body -->
           <rect x="4" y="20" width="88" height="48" rx="9" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>
           <!-- Wallet flap (top) -->
-          <path d="M4 29 Q4 20 13 20 L83 20 Q92 20 92 29 L92 34
-cd ~/folio && git add static/index.html && git commit -m "Two-column layout, multilingual labels, no emojis, redesigned logo" && git push
+          <path d="M4 29 Q4 20 13 20 L83 20 Q92 20 92 29 L92 34 L4 34 Z" fill="var(--accent)" opacity=".15"/>
+          <path d="M13 20 L83 20 Q92 20 92 29 L92 32 L4 32 L4 29 Q4 20 13 20Z" stroke="var(--accent)" stroke-width="1.2" fill="none" opacity=".4"/>
+          <!-- Coin pocket -->
+          <rect x="58" y="37" width="28" height="22" rx="5" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.2" opacity=".9"/>
+          <!-- Coin slot line -->
+          <line x1="66" y1="48" x2="78" y2="48" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+          <!-- Card lines inside wallet -->
+          <rect x="10" y="39" width="34" height="3" rx="1.5" fill="var(--border)"/>
+          <rect x="10" y="46" width="24" height="3" rx="1.5" fill="var(--border)"/>
+          <rect x="10" y="53" width="28" height="3" rx="1.5" fill="var(--border)"/>
+        </svg>
+      </div>
+      <div class="logo-name">Folio</div>
+      <div class="logo-sub">Analyse de sentiment financier</div>
+    </div>
+
+    <div class="card">
+      <label class="field-label">Texte à analyser</label>
+      <textarea id="inp" placeholder="Ex : Les résultats de LVMH dépassent les attentes du marché..."></textarea>
+      <div class="lang-row">
+        <span class="lang-detected" id="lang-detected"></span>
+      </div>
+      <button class="btn" id="btn" onclick="analyse()">Analyser</button>
+    </div>
+
+    <div class="result" id="result">
+      <div class="result-card" id="result-card">
+        <div class="result-label" id="r-label"></div>
+        <div class="result-meaning" id="r-meaning"></div>
+        <div class="result-bar-track">
+          <div class="result-bar-fill" id="r-bar"></div>
+        </div>
+        <div class="result-meta">
+          <span id="r-lang-line"></span>
+          <span id="r-pct"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-title">Historique</div>
+    <div class="hist-empty" id="hist-empty">Les analyses apparaîtront ici.</div>
+    <div class="hist-list" id="hist-list"></div>
+  </div>
+
+</div>
+
+<script>
+const LANG_NAMES = {
+  fr: 'Français',
+  en: 'Anglais',
+  de: 'Allemand',
+  es: 'Espagnol',
+  it: 'Italien',
+};
+
+const LABELS = {
+  positive: {
+    fr: { label: 'Positif',  meaning: 'Signal haussier, sentiment favorable aux marchés' },
+    en: { label: 'Positive', meaning: 'Bullish signal, favorable market sentiment' },
+    de: { label: 'Positiv',  meaning: 'Positives Signal, günstiges Marktsentiment' },
+    es: { label: 'Positivo', meaning: 'Señal alcista, sentimiento favorable al mercado' },
+    it: { label: 'Positivo', meaning: 'Segnale rialzista, sentiment di mercato favorevole' },
+  },
+  negative: {
+    fr: { label: 'Négatif',  meaning: 'Signal baissier, sentiment défavorable aux marchés' },
+    en: { label: 'Negative', meaning: 'Bearish signal, unfavorable market sentiment' },
+    de: { label: 'Negativ',  meaning: 'Negatives Signal, ungünstiges Marktsentiment' },
+    es: { label: 'Negativo', meaning: 'Señal bajista, sentimiento desfavorable al mercado' },
+    it: { label: 'Negativo', meaning: 'Segnale ribassista, sentiment di mercato sfavorevole' },
+  },
+  neutral: {
+    fr: { label: 'Neutre',  meaning: 'Pas de signal directionnel clair' },
+    en: { label: 'Neutral', meaning: 'No clear directional signal' },
+    de: { label: 'Neutral', meaning: 'Kein klares Richtungssignal' },
+    es: { label: 'Neutral', meaning: 'Sin señal direccional clara' },
+    it: { label: 'Neutro',  meaning: 'Nessun segnale direzionale chiaro' },
+  },
+};
+
+const CONF_LABEL = {
+  fr: 'Niveau de confiance',
+  en: 'Confidence level',
+  de: 'Konfidenzniveau',
+  es: 'Nivel de confianza',
+  it: 'Livello di confidenza',
+};
+
+const LANG_LABEL = {
+  fr: lang => `Langue détectée : ${LANG_NAMES[lang] || lang}`,
+  en: lang => `Detected language: ${LANG_NAMES[lang] || lang}`,
+  de: lang => `Erkannte Sprache: ${LANG_NAMES[lang] || lang}`,
+  es: lang => `Idioma detectado: ${LANG_NAMES[lang] || lang}`,
+  it: lang => `Lingua rilevata: ${LANG_NAMES[lang] || lang}`,
+};
+
+const BAR_COLOR = { positive: '#059669', negative: '#dc2626', neutral: '#d97706' };
+const CARD_CLASS = { positive: 'pos', negative: 'neg', neutral: 'neu' };
+
+let history = [];
+
+async function analyse() {
+  const text = document.getElementById('inp').value.trim();
+  if (!text) return;
+  const btn = document.getElementById('btn');
+  btn.disabled = true;
+  btn.textContent = 'Analyse en cours...';
+  try {
+    const res = await fetch('/api/sentiment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    if (!res.ok) throw new Error('Erreur serveur');
+    const data = await res.json();
+    showResult(data);
+    addHistory(data);
+  } catch(e) {
+    btn.textContent = 'Erreur, réessayez';
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'Analyser'; }, 2000);
+    return;
+  }
+  btn.disabled = false;
+  btn.textContent = 'Analyser';
+}
+
+function showResult(data) {
+  const lang = data.lang || 'fr';
+  const sentimentKey = data.label;
+  const langLabels = LABELS[sentimentKey]?.[lang] || LABELS[sentimentKey]?.en || LABELS.neutral.en;
+  const pct = Math.round(data.score * 100);
+  const cls = CARD_CLASS[sentimentKey] || 'neu';
+  const confText = CONF_LABEL[lang] || CONF_LABEL.en;
+  const langLine = (LANG_LABEL[lang] || LANG_LABEL.en)(lang);
+
+  const labelEl = document.getElementById('r-label');
+  labelEl.textContent = langLabels.label;
+  labelEl.className = 'result-label ' + cls;
+
+  document.getElementById('r-meaning').textContent = langLabels.meaning;
+  document.getElementById('r-bar').style.width = pct + '%';
+  document.getElementById('r-bar').style.background = BAR_COLOR[sentimentKey] || '#6b7280';
+  document.getElementById('r-pct').textContent = confText + ' : ' + pct + '%';
+  document.getElementById('r-lang-line').textContent = langLine;
+
+  const card = document.getElementById('result-card');
+  card.className = 'result-card ' + cls;
+
+  document.getElementById('lang-detected').textContent = LANG_NAMES[lang] ? 'Langue : ' + LANG_NAMES[lang] : '';
+
+  document.getElementById('result').style.display = 'block';
+}
+
+function addHistory(data) {
+  const lang = data.lang || 'fr';
+  const sentimentKey = data.label;
+  const langLabels = LABELS[sentimentKey]?.[lang] || LABELS[sentimentKey]?.en;
+  const pct = Math.round(data.score * 100);
+  const cls = CARD_CLASS[sentimentKey] || 'neu';
+
+  history.unshift({ text: data.text, label: langLabels?.label || sentimentKey, cls, score: pct });
+  if (history.length > 8) history.pop();
+
+  document.getElementById('hist-empty').style.display = 'none';
+  document.getElementById('hist-list').innerHTML = history.map(h => `
+    <div class="hist-item">
+      <div class="hist-text">${h.text}</div>
+      <div class="hist-footer">
+        <span class="hist-badge ${h.cls}">${h.label}</span>
+        <span class="hist-score">${h.score}%</span>
+      </div>
+    </div>`).join('');
+}
+
+document.getElementById('inp').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) analyse();
+});
+</script>
+</body>
+</html>
