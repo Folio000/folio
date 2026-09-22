@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Folio</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 40px;
+      width: 100%;
+      max-width: 560px;
+    }
+    h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+    p { color: #888; font-size: 14px; margin-bottom: 28px; }
+    textarea {
+      width: 100%;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #f0f0f0;
+      font-size: 15px;
+      padding: 14px;
+      resize: vertical;
+      min-height: 100px;
+      outline: none;
+    }
+    textarea:focus { border-color: #555; }
+    button {
+      margin-top: 16px;
+      width: 100%;
+      background: #f0f0f0;
+      color: #0f0f0f;
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: #ddd; }
+    button:disabled { background: #333; color: #666; cursor: not-allowed; }
+    .result {
+      margin-top: 24px;
+      padding: 20px;
+      border-radius: 8px;
+      display: none;
+    }
+    .positive { background: #0d2b1a; border: 1px solid #1a5c35; }
+    .negative { background: #2b0d0d; border: 1px solid #5c1a1a; }
+    .neutral  { background: #1a1a0d; border: 1px solid #5c5c1a; }
+    .label { font-size: 18px; font-weight: 700; text-transform: capitalize; }
+    .score { font-size: 13px; color: #888; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Folio</h1>
+    <p>Analyse le sentiment financier d'un texte avec l'IA</p>
+    <textarea id="input" placeholder="Ex: Apple stock surges after record profits..."></textarea>
+    <button id="btn" onclick="analyze()">Analyser</button>
+    <div class="result" id="result">
+      <div class="label" id="label"></div>
+      <div class="score" id="score"></div>
+    </div>
+  </div>
+
+  <script>
+    async function analyze() {
+      const text = document.getElementById('input').value.trim();
+      if (!text) return;
+      const btn = document.getElementById('btn');
+      btn.disabled = true;
+      btn.textContent = 'Analyse en cours...';
+      try {
+        const res = await fetch(`/api/sentiment?text=${encodeURIComponent(text)}`, {
+          method: 'POST'
+        });
+        const data = await res.json();
+        const result = document.getElementById('result');
+        result.className = 'result ' + data.label;
+        result.style.display = 'block';
+        document.getElementById('label').textContent = data.label;
+        document.getElementById('score').textContent = `Confiance : ${Math.round(data.score * 100)}%`;
+      } catch (e) {
+        alert('Erreur de connexion au serveur');
+      }
+      btn.disabled = false;
+      btn.textContent = 'Analyser';
+    }
+  </script>
+</body>
+</html>
