@@ -61,7 +61,7 @@ def health():
     stats = memory.get_stats()
     return {
         "status": "ok",
-        "version": "8.0",
+        "version": "8.1",
         "groq_key_present": bool(os.getenv("GROQ_API_KEY")),
         "fred_key_present": bool(os.getenv("FRED_API_KEY")),
         "db_connected": stats.get("db", False),
