@@ -346,9 +346,17 @@ html, body {
   text-align: center;
   padding: 32px 0 8px;
 }
+.welcome-folio {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #3a9e5f;
+  margin-bottom: 4px;
+  line-height: 1.1;
+}
 .welcome h2 {
   font-family: 'DM Serif Display', serif;
-  font-size: 26px;
+  font-size: 22px;
   color: var(--text);
   margin-bottom: 6px;
 }
@@ -965,7 +973,7 @@ html, body {
     </div>
 
     <nav class="tab-nav">
-      <button class="tab-btn active" data-tab="conseil" onclick="switchTab('conseil',this)">Conseil</button>
+      <button class="tab-btn active" data-tab="conseil" onclick="switchTab('conseil',this)">Analyse</button>
       <button class="tab-btn" data-tab="historique" onclick="switchTab('historique',this)">Historique</button>
     </nav>
 
@@ -1016,7 +1024,7 @@ html, body {
         </div>
       </div>
       <div class="hist-list" id="hist-list">
-        <div class="hist-empty">Vos questions et conseils apparaîtront ici.</div>
+        <div class="hist-empty">Vos questions et analyses apparaîtront ici.</div>
       </div>
     </div>
 
@@ -1025,26 +1033,27 @@ html, body {
     <div class="center-scroll" id="scroll-area">
 
       <div class="welcome" id="welcome">
-        <h2>Comment puis-je vous conseiller ?</h2>
-        <p>Posez votre question en langage naturel. Folio analyse les marchés en temps réel pour vous guider.</p>
+        <div class="welcome-folio">Folio</div>
+        <h2>Comprendre l'investissement</h2>
+        <p>Posez une question sur un titre, un secteur ou une tendance. Folio croise les données de marché et l'actualité pour vous apporter un éclairage sourcé.</p>
       </div>
 
       <div class="chips">
-        <button class="chip" onclick="pick(this)">J'ai 100 € à placer ce mois</button>
-        <button class="chip" onclick="pick(this)">Quelle action acheter pour le long terme ?</button>
-        <button class="chip" onclick="pick(this)">Analyser mon portefeuille actuel</button>
-        <button class="chip" onclick="pick(this)">Où investir en période d'incertitude ?</button>
-        <button class="chip" onclick="pick(this)">Meilleure action européenne du moment ?</button>
+        <button class="chip" onclick="pick(this)">Comment fonctionne la diversification de portefeuille ?</button>
+        <button class="chip" onclick="pick(this)">Quels critères analysent les investisseurs long terme ?</button>
+        <button class="chip" onclick="pick(this)">Décrypter la composition d'un portefeuille</button>
+        <button class="chip" onclick="pick(this)">Comment les marchés réagissent en période d'incertitude ?</button>
+        <button class="chip" onclick="pick(this)">Quelles tendances sur les marchés européens ?</button>
       </div>
 
       <div class="ask-wrap">
         <div class="ask-box">
           <div class="ask-label">Votre question</div>
           <textarea class="ask-textarea" id="qinput" rows="3"
-            placeholder="Ex : J'ai 200 € à investir ce mois, que me recommandes-tu selon les marchés actuels ?"></textarea>
+            placeholder="Ex : Pourquoi Nvidia progresse-t-il malgré les tensions géopolitiques ?"></textarea>
           <div class="ask-actions">
             <span class="ask-hint">Ctrl + Entrée pour envoyer</span>
-            <button class="btn-send" id="send-btn" onclick="send()">Obtenir un conseil</button>
+            <button class="btn-send" id="send-btn" onclick="send()">Analyser</button>
           </div>
         </div>
       </div>
@@ -1162,10 +1171,10 @@ async function send() {
   renderLoading(res);
 
   try {
-    const r = await fetch('/api/advise', {
+    const r = await fetch('/api/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: q, portfolio, risk_profile: risk })
+      body: JSON.stringify({ question: q })
     });
     const data = await r.json();
     renderResult(res, q, data);
@@ -1191,7 +1200,7 @@ function renderResult(el, q, data) {
   let html = `<div class="answer-card">
     <div class="answer-q">"${q}"</div>
     <div class="answer-top">
-      <span class="answer-title">Recommandation Folio</span>
+      <span class="answer-title">Analyse Folio</span>
       <span class="answer-lang-tag">${LANG_NAME[lang] || lang}</span>
     </div>
     <div class="answer-body">${parseAnswer(data.answer || '')}</div>
@@ -1199,7 +1208,7 @@ function renderResult(el, q, data) {
 
   if (data.mentioned_assets && data.mentioned_assets.length) {
     html += `<div class="assets-section">
-      <div class="section-label">Actifs mentionnés dans la recommandation</div>
+      <div class="section-label">Actifs mentionnés dans l'analyse</div>
       <div class="assets-grid">${data.mentioned_assets.map(a => assetCard(a)).join('')}</div>
     </div>`;
   }
@@ -1285,7 +1294,7 @@ function renderHistory() {
   const el = document.getElementById('hist-list');
   document.getElementById('hist-count').textContent = history.length;
   if (!history.length) {
-    el.innerHTML = '<div class="hist-empty">Vos questions et conseils apparaîtront ici.<br>Vous pourrez les relire et les comparer.</div>';
+    el.innerHTML = '<div class="hist-empty">Vos questions et analyses apparaîtront ici.<br>Vous pourrez les relire et les comparer.</div>';
     return;
   }
   el.innerHTML = history.map((h, i) => {
