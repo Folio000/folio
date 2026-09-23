@@ -11,9 +11,16 @@ from typing import Optional
 
 from engine.pipeline import run
 from data.market import get_snapshot
+from engine import memory
 
-app = FastAPI(title="Folio", version="7.0")
+app = FastAPI(title="Folio", version="8.0")
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.on_event("startup")
+def on_startup():
+    """Initialise les tables PostgreSQL au démarrage."""
+    memory.init_db()
 
 
 # ── Modèles ──────────────────────────────────────────────────────────
@@ -51,9 +58,13 @@ def snapshot():
 @app.get("/api/health")
 def health():
     import os
+    stats = memory.get_stats()
     return {
         "status": "ok",
-        "version": "7.0",
+        "version": "8.0",
         "groq_key_present": bool(os.getenv("GROQ_API_KEY")),
         "fred_key_present": bool(os.getenv("FRED_API_KEY")),
+        "db_connected": stats.get("db", False),
+        "analyses_stored": stats.get("analyses_stored", 0),
+        "news_cached": stats.get("news_cached", 0),
     }
