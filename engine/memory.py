@@ -14,13 +14,31 @@ logger = logging.getLogger(__name__)
 # ── Connexion ─────────────────────────────────────────────────────────
 
 def _get_conn():
-    """Connexion PostgreSQL via DATABASE_URL (Railway auto-injecte cette variable)."""
+    """Connexion PostgreSQL via DATABASE_URL (Railway auto-injecte cette variable).
+    Utilise pg8000 (pur Python, compatible Python 3.13, pas de compilation C).
+    """
     try:
-        import psycopg2
+        import pg8000
+        import ssl
+        import urllib.parse
+
         url = os.getenv("DATABASE_URL", "")
         if not url:
             return None
-        conn = psycopg2.connect(url, sslmode="require")
+
+        p = urllib.parse.urlparse(url)
+        ssl_ctx = ssl.create_default_context()
+        ssl_ctx.check_hostname = False
+        ssl_ctx.verify_mode = ssl.CERT_NONE
+
+        conn = pg8000.connect(
+            host=p.hostname,
+            port=p.port or 5432,
+            database=p.path.lstrip("/"),
+            user=p.username,
+            password=p.password,
+            ssl_context=ssl_ctx,
+        )
         return conn
     except Exception as e:
         logger.warning(f"Mémoire indisponible : {e}")
