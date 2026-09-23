@@ -13,7 +13,7 @@ from engine.pipeline import run
 from data.market import get_snapshot
 from engine import memory
 
-app = FastAPI(title="Folio", version="8.0")
+app = FastAPI(title="Folio", version="8.1")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
