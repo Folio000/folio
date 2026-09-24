@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 def _get_conn():
     """Connexion PostgreSQL via DATABASE_URL (Railway auto-injecte cette variable).
     Utilise pg8000 (pur Python, compatible Python 3.13, pas de compilation C).
+    timeout=5 : échec rapide si la base est injoignable (évite de bloquer le thread).
     """
     try:
         import pg8000
@@ -38,6 +39,7 @@ def _get_conn():
             user=p.username,
             password=p.password,
             ssl_context=ssl_ctx,
+            timeout=5,          # ← échec rapide si injoignable (évite le hang)
         )
         return conn
     except Exception as e:

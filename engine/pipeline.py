@@ -6,11 +6,12 @@ Flux :
 3. Enrichissement parallèle : marché + macro + RSS + scraper multi-sources
 4. Construction contexte enrichi (mémoire + données fraîches)
 5. Appel LLM Groq
-6. Persistance de l'analyse en PostgreSQL
+6. Persistance de l'analyse en PostgreSQL (thread daemon — non bloquant)
 """
 
 import re
 import logging
+import threading
 import concurrent.futures
 from langdetect import detect
 
@@ -101,6 +102,12 @@ def _format_memory(past: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def _fire_and_forget(fn, *args):
+    """Lance fn(*args) dans un thread daemon — ne bloque jamais la réponse HTTP."""
+    t = threading.Thread(target=fn, args=args, daemon=True)
+    t.start()
+
+
 # ── Contexte ───────────────────────────────────────────────────────────
 
 def _build_context(ticker: str | None, question: str, lang: str) -> str:
@@ -111,8 +118,12 @@ def _build_context(ticker: str | None, question: str, lang: str) -> str:
     - macro (FRED)
     - RSS existants
     - scraper multi-sources (15+ sites)
+
+    Les sauvegardes PostgreSQL (save_news) sont déléguées à des threads daemon
+    APRÈS la sortie du pool principal — le shutdown(wait=True) ne les attend pas.
     """
     parts: list[str] = []
+    scraped_to_save = None          # ← capturé hors du with pour l'enregistrer après
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
         # Mémoire : analyses récentes du même ticker
@@ -181,17 +192,17 @@ def _build_context(ticker: str | None, question: str, lang: str) -> str:
         try:
             scraped = fut_scrape.result(timeout=12)
             if scraped:
-                # Sauvegarde en cache PostgreSQL (non bloquant)
-                if ticker:
-                    try:
-                        pool.submit(memory.save_news, scraped, ticker)
-                    except Exception:
-                        pass
+                scraped_to_save = scraped   # ← sera sauvegardé APRÈS la sortie du with
                 scraped_text = format_for_context(scraped, max_chars=4000)
                 if scraped_text:
                     parts.append(f"[Sources web agrégées]\n{scraped_text}")
         except Exception as e:
             logger.debug(f"scraper timeout: {e}")
+
+    # ↑ Le pool est fermé ici (shutdown wait=True sur les 6 futures de données).
+    # save_news est lancé APRÈS pour ne jamais bloquer la réponse HTTP.
+    if scraped_to_save and ticker:
+        _fire_and_forget(memory.save_news, scraped_to_save, ticker)
 
     if not parts:
         return "Aucune donnée de marché disponible pour le moment."
@@ -204,7 +215,7 @@ def _build_context(ticker: str | None, question: str, lang: str) -> str:
 def run(question: str) -> dict:
     """
     Orchestre une question complète.
-    Retourne : answer, ticker, lang, sources_count.
+    Retourne : answer, ticker, lang, data_available.
     """
     lang   = _detect_lang(question)
     ticker = _extract_ticker(question)
@@ -215,17 +226,11 @@ def run(question: str) -> dict:
     # Appel LLM
     answer = ask(question, context)
 
-    # Persistance asynchrone (non bloquante pour la réponse)
-    try:
-        memory.save_analysis(
-            question=question,
-            answer=answer,
-            ticker=ticker,
-            lang=lang,
-            context=context[:3000],
-        )
-    except Exception as e:
-        logger.warning(f"save_analysis failed: {e}")
+    # Persistance asynchrone — thread daemon, ne bloque pas la réponse
+    _fire_and_forget(
+        memory.save_analysis,
+        question, answer, ticker, lang, context[:3000],
+    )
 
     return {
         "answer":         answer,

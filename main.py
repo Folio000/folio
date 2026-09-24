@@ -1,8 +1,9 @@
 """
-main.py — Folio v7 API
+main.py — Folio v8 API
 Moteur d'éducation financière — FastAPI + Groq + RSS
 """
 
+import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -13,7 +14,10 @@ from engine.pipeline import run
 from data.market import get_snapshot
 from engine import memory
 
-app = FastAPI(title="Folio", version="8.1")
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="Folio", version="8.2")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
@@ -45,7 +49,14 @@ def ask_endpoint(body: QuestionIn):
     q = body.question.strip()
     if not q:
         raise HTTPException(status_code=400, detail="Question vide")
-    return run(q)
+    try:
+        logger.info(f"[ask] question reçue : {q[:80]}")
+        result = run(q)
+        logger.info(f"[ask] réponse prête — ticker={result.get('ticker')}, lang={result.get('lang')}")
+        return result
+    except Exception as e:
+        logger.error(f"[ask] ERREUR pipeline : {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Erreur pipeline : {e}")
 
 
 @app.get("/api/snapshot")
@@ -61,7 +72,7 @@ def health():
     stats = memory.get_stats()
     return {
         "status": "ok",
-        "version": "8.1",
+        "version": "8.2",
         "groq_key_present": bool(os.getenv("GROQ_API_KEY")),
         "fred_key_present": bool(os.getenv("FRED_API_KEY")),
         "db_connected": stats.get("db", False),
