@@ -110,7 +110,35 @@ def _fire_and_forget(fn, *args):
 
 # ── Contexte ───────────────────────────────────────────────────────────
 
-def _build_context(ticker: str | None, question: str, lang: str) -> str:
+def _extract_sources(scraped: list) -> list[dict]:
+    """
+    Extrait jusqu'à 6 sources d'articles depuis les résultats du scraper.
+    Chaque article a : title, url, source.
+    """
+    sources = []
+    seen_urls = set()
+    for item in scraped:
+        if len(sources) >= 6:
+            break
+        if not isinstance(item, dict):
+            continue
+        url = item.get("url") or item.get("link") or ""
+        if not url or url in seen_urls:
+            continue
+        title = item.get("title") or item.get("headline") or ""
+        source = item.get("source") or item.get("site") or ""
+        if not title:
+            continue
+        seen_urls.add(url)
+        sources.append({
+            "title":  title[:120],
+            "url":    url,
+            "source": source[:60],
+        })
+    return sources
+
+
+def _build_context(ticker: str | None, question: str, lang: str) -> tuple[str, list[dict]]:
     """
     Assemble le contexte en parallèle :
     - mémoire PostgreSQL (analyses passées)
@@ -119,10 +147,13 @@ def _build_context(ticker: str | None, question: str, lang: str) -> str:
     - RSS existants
     - scraper multi-sources (15+ sites)
 
+    Retourne (context_str, article_sources).
+
     Les sauvegardes PostgreSQL (save_news) sont déléguées à des threads daemon
     APRÈS la sortie du pool principal — le shutdown(wait=True) ne les attend pas.
     """
     parts: list[str] = []
+    article_sources: list[dict] = []
     scraped_to_save = None          # ← capturé hors du with pour l'enregistrer après
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
@@ -193,6 +224,7 @@ def _build_context(ticker: str | None, question: str, lang: str) -> str:
             scraped = fut_scrape.result(timeout=12)
             if scraped:
                 scraped_to_save = scraped   # ← sera sauvegardé APRÈS la sortie du with
+                article_sources = _extract_sources(scraped)
                 scraped_text = format_for_context(scraped, max_chars=4000)
                 if scraped_text:
                     parts.append(f"[Sources web agrégées]\n{scraped_text}")
@@ -205,9 +237,9 @@ def _build_context(ticker: str | None, question: str, lang: str) -> str:
         _fire_and_forget(memory.save_news, scraped_to_save, ticker)
 
     if not parts:
-        return "Aucune donnée de marché disponible pour le moment."
+        return "Aucune donnée de marché disponible pour le moment.", []
 
-    return "\n\n".join(parts)
+    return "\n\n".join(parts), article_sources
 
 
 # ── Point d'entrée ─────────────────────────────────────────────────────
@@ -215,13 +247,13 @@ def _build_context(ticker: str | None, question: str, lang: str) -> str:
 def run(question: str) -> dict:
     """
     Orchestre une question complète.
-    Retourne : answer, ticker, lang, data_available.
+    Retourne : answer, ticker, lang, data_available, sources.
     """
     lang   = _detect_lang(question)
     ticker = _extract_ticker(question)
 
-    # Construction du contexte enrichi
-    context = _build_context(ticker, question, lang)
+    # Construction du contexte enrichi + sources d'articles
+    context, sources = _build_context(ticker, question, lang)
 
     # Appel LLM
     answer = ask(question, context)
@@ -237,4 +269,5 @@ def run(question: str) -> dict:
         "ticker":         ticker,
         "lang":           lang,
         "data_available": bool(context),
+        "sources":        sources,
     }

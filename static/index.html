@@ -59,81 +59,6 @@
   --neg-bg: #2a1010;
 }
 
-/* ── Thème par profil de risque ─────────────────────────── */
-/* Prudent — vert clair */
-:root[data-risk="prudent"] {
-  --accent: #5ba08a;
-  --accent-hover: #4a8c78;
-  --accent-light: #e8f5f1;
-  --pos: #3d8c6e;
-  --pos-bg: #e8f5f1;
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-risk="prudent"]:not([data-theme="light"]) {
-    --accent: #70c4a8;
-    --accent-hover: #82d4b8;
-    --accent-light: #12302a;
-    --pos: #70c4a8;
-    --pos-bg: #12302a;
-  }
-}
-:root[data-risk="prudent"][data-theme="dark"] {
-  --accent: #70c4a8;
-  --accent-hover: #82d4b8;
-  --accent-light: #12302a;
-  --pos: #70c4a8;
-  --pos-bg: #12302a;
-}
-
-/* Modéré — vert moyen (défaut) */
-:root[data-risk="modéré"] {
-  --accent: #2a6049;
-  --accent-hover: #215040;
-  --accent-light: #e6f2ed;
-  --pos: #1a6b3a;
-  --pos-bg: #e6f4ec;
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-risk="modéré"]:not([data-theme="light"]) {
-    --accent: #4dab7e;
-    --accent-hover: #5ec48f;
-    --accent-light: #1a3327;
-    --pos: #5eba82;
-    --pos-bg: #142b1e;
-  }
-}
-:root[data-risk="modéré"][data-theme="dark"] {
-  --accent: #4dab7e;
-  --accent-hover: #5ec48f;
-  --accent-light: #1a3327;
-  --pos: #5eba82;
-  --pos-bg: #142b1e;
-}
-
-/* Agressif — vert foncé */
-:root[data-risk="agressif"] {
-  --accent: #1a3d2e;
-  --accent-hover: #122b20;
-  --accent-light: #d4e8df;
-  --pos: #0f4a26;
-  --pos-bg: #d4e8df;
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-risk="agressif"]:not([data-theme="light"]) {
-    --accent: #2e7d52;
-    --accent-hover: #3a9462;
-    --accent-light: #0f2a1c;
-    --pos: #3a9462;
-    --pos-bg: #0f2a1c;
-  }
-}
-:root[data-risk="agressif"][data-theme="dark"] {
-  --accent: #2e7d52;
-  --accent-hover: #3a9462;
-  --accent-light: #0f2a1c;
-  --pos: #3a9462;
-  --pos-bg: #0f2a1c;
-}
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -212,48 +137,6 @@ html, body {
   gap: 10px;
 }
 
-/* Risk pills — droite de la topbar */
-.topbar-risk {
-  display: flex;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-.risk-btn {
-  padding: 6px 16px;
-  border: none;
-  background: transparent;
-  color: var(--text2);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-.risk-btn.active { background: var(--accent); color: #fff; font-weight: 600; }
-.risk-btn:hover:not(.active) { color: var(--text); }
-.profile-badge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  font-size: 12px;
-  color: var(--text2);
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
-.profile-badge:hover { border-color: var(--accent); color: var(--accent); }
-.profile-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-}
 
 /* ── Left panel — Historique sidebar ───────── */
 .panel-left {
@@ -656,12 +539,70 @@ html, body {
   padding: 1px 7px;
   border-radius: 8px;
 }
-.hist-risk {
-  font-size: 10px;
+/* ── Sources d'articles ────────────────────────── */
+.sources-section {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.sources-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
   color: var(--text3);
-  padding: 1px 6px;
+  margin-bottom: 8px;
+}
+.sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.source-link {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+  line-height: 1.4;
+}
+.source-link:hover { text-decoration: underline; }
+.source-link:hover .source-name { color: var(--accent-hover); }
+.source-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+.source-title { flex: 1; min-width: 0; }
+.source-name {
+  font-size: 11px;
+  color: var(--text3);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── TradingView widget ────────────────────────── */
+.chart-section {
+  background: var(--surface);
+  border-radius: var(--r);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  overflow: hidden;
+}
+.chart-label {
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--text3);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.chart-wrap {
+  padding: 0;
+  height: 300px;
+  position: relative;
 }
 
 /* ── Onglets navigation ─────────────────────── */
@@ -925,7 +866,6 @@ html, body {
 
 @media (max-width: 700px) {
   .shell { grid-template-rows: 72px 1fr; }
-  .topbar-risk { display: none; }
   .tab-nav { margin-left: 12px; }
   .brand-name { font-size: 28px; }
   .upload-bar, .upload-loaded { max-width: 100%; }
@@ -1003,11 +943,6 @@ html, body {
         <button class="btn-reset" onclick="resetPortfolio(); event.stopPropagation()">✕</button>
       </div>
 
-      <div class="topbar-risk">
-        <button class="risk-btn" data-risk="prudent" onclick="setRisk('prudent',this)">Prudent</button>
-        <button class="risk-btn active" data-risk="modéré" onclick="setRisk('modéré',this)">Modéré</button>
-        <button class="risk-btn" data-risk="agressif" onclick="setRisk('agressif',this)">Agressif</button>
-      </div>
     </div>
   </header>
 
@@ -1070,7 +1005,6 @@ html, body {
 
 <script>
 // ── State ───────────────────────────────────────────────────
-let risk = localStorage.getItem('folio_risk') || 'modéré';
 let portfolio = tryParse('folio_portfolio', []);
 let history = tryParse('folio_history', []);
 let activeHistIdx = -1;
@@ -1083,8 +1017,6 @@ const LANG_NAME = { fr:'Français', en:'English', de:'Deutsch', es:'Español', i
 
 // ── Init ────────────────────────────────────────────────────
 function init() {
-  applyRisk(risk, false);
-  document.documentElement.setAttribute('data-risk', risk);
   renderHistory();
   document.getElementById('qinput').addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') send();
@@ -1102,24 +1034,6 @@ function switchTabByName(name) {
   switchTab(name, btn);
 }
 
-// ── Risk ────────────────────────────────────────────────────
-const RISKS = ['prudent', 'modéré', 'agressif'];
-function cycleRisk() {
-  const next = RISKS[(RISKS.indexOf(risk) + 1) % RISKS.length];
-  const btn = document.querySelector(`.risk-btn[data-risk="${next}"]`);
-  setRisk(next, btn);
-}
-function setRisk(r, el) {
-  risk = r;
-  localStorage.setItem('folio_risk', r);
-  document.querySelectorAll('.risk-btn').forEach(b => b.classList.toggle('active', b.dataset.risk === r));
-  document.documentElement.setAttribute('data-risk', r);
-}
-function applyRisk(r) {
-  risk = r;
-  document.querySelectorAll('.risk-btn').forEach(b => b.classList.toggle('active', b.dataset.risk === r));
-  document.documentElement.setAttribute('data-risk', r);
-}
 
 // ── Portfolio ───────────────────────────────────────────────
 function addPos() {
@@ -1178,7 +1092,7 @@ async function send() {
     });
     const data = await r.json();
     renderResult(res, q, data);
-    const entry = { q, lang: data.lang, answer: data.answer, ts: new Date().toISOString(), amount: data.amount, risk, mentioned: data.mentioned_assets || [] };
+    const entry = { q, lang: data.lang, answer: data.answer, ts: new Date().toISOString(), amount: data.amount, mentioned: data.mentioned_assets || [], sources: data.sources || [], ticker: data.ticker };
     history.unshift(entry);
     if (history.length > 30) history.pop();
     activeHistIdx = 0;
@@ -1197,14 +1111,41 @@ function renderLoading(el) {
 
 function renderResult(el, q, data) {
   const lang = data.lang || 'fr';
+  const sources = data.sources || [];
+  const ticker = data.ticker || null;
+
+  // Sources block inside answer card
+  let sourcesHtml = '';
+  if (sources.length) {
+    const links = sources.map(s => `
+      <a class="source-link" href="${escHtml(s.url)}" target="_blank" rel="noopener">
+        <span class="source-dot"></span>
+        <span class="source-title">${escHtml(s.title)}</span>
+        ${s.source ? `<span class="source-name">${escHtml(s.source)}</span>` : ''}
+      </a>`).join('');
+    sourcesHtml = `<div class="sources-section">
+      <div class="sources-label">SOURCES</div>
+      <div class="sources-list">${links}</div>
+    </div>`;
+  }
+
   let html = `<div class="answer-card">
-    <div class="answer-q">"${q}"</div>
+    <div class="answer-q">"${escHtml(q)}"</div>
     <div class="answer-top">
       <span class="answer-title">Analyse Folio</span>
       <span class="answer-lang-tag">${LANG_NAME[lang] || lang}</span>
     </div>
-    <div class="answer-body">${parseAnswer(data.answer || '')}</div>
+    <div class="answer-body">${parseAnswer(data.answer || '')}${sourcesHtml}</div>
   </div>`;
+
+  // TradingView mini chart — only when a ticker is known
+  if (ticker) {
+    const tvSymbol = ticker.includes('.') ? ticker : ticker;
+    html += `<div class="chart-section">
+      <div class="chart-label">GRAPHIQUE — ${escHtml(ticker)}</div>
+      <div class="chart-wrap" id="tv-widget-wrap"></div>
+    </div>`;
+  }
 
   if (data.mentioned_assets && data.mentioned_assets.length) {
     html += `<div class="assets-section">
@@ -1222,6 +1163,58 @@ function renderResult(el, q, data) {
     }
   }
   el.innerHTML = html;
+
+  // Inject TradingView widget after DOM update
+  if (ticker) {
+    injectTradingViewWidget(ticker);
+  }
+}
+
+function injectTradingViewWidget(ticker) {
+  const wrap = document.getElementById('tv-widget-wrap');
+  if (!wrap) return;
+  // Clean up previous script if any
+  const prev = document.getElementById('tv-script');
+  if (prev) prev.remove();
+
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    || (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  const container = document.createElement('div');
+  container.className = 'tradingview-widget-container';
+  container.style.height = '300px';
+  const inner = document.createElement('div');
+  inner.className = 'tradingview-widget-container__widget';
+  inner.style.height = '300px';
+  container.appendChild(inner);
+  wrap.appendChild(container);
+
+  const script = document.createElement('script');
+  script.id = 'tv-script';
+  script.type = 'text/javascript';
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
+  script.async = true;
+  script.innerHTML = JSON.stringify({
+    symbol: ticker,
+    width: '100%',
+    height: '300',
+    locale: 'fr',
+    dateRange: '3M',
+    colorTheme: isDark ? 'dark' : 'light',
+    trendLineColor: 'rgba(42, 96, 73, 1)',
+    underLineColor: 'rgba(42, 96, 73, 0.15)',
+    underLineBottomColor: 'rgba(42, 96, 73, 0)',
+    isTransparent: true,
+    autosize: true,
+    largeChartUrl: `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(ticker)}`
+  });
+  container.appendChild(script);
+}
+
+function escHtml(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
 }
 
 function mdToHtml(s) {
@@ -1309,7 +1302,7 @@ function renderHistory() {
         <span class="hist-time">${time}</span>
         <div style="display:flex;gap:4px;align-items:center">
           ${h.amount ? `<span class="hist-amount">${fmt(h.amount)} €</span>` : ''}
-          <span class="hist-risk">${h.risk || ''}</span>
+          ${h.ticker ? `<span style="font-size:10px;color:var(--accent);background:var(--accent-light);padding:1px 6px;border-radius:8px;font-weight:700">${h.ticker}</span>` : ''}
         </div>
       </div>
     </div>`;
@@ -1324,7 +1317,7 @@ function loadHist(i) {
   document.getElementById('welcome').style.display = 'none';
   const res = document.getElementById('result');
   res.style.display = 'flex';
-  renderResult(res, h.q, { answer: h.answer, lang: h.lang, mentioned_assets: h.mentioned || [], snapshot: [] });
+  renderResult(res, h.q, { answer: h.answer, lang: h.lang, ticker: h.ticker, sources: h.sources || [], mentioned_assets: h.mentioned || [], snapshot: [] });
   renderHistory();
   document.getElementById('scroll-area').scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1415,8 +1408,10 @@ function fmtCap(n) {
   return fmt(n);
 }
 function save() {
-  localStorage.setItem('folio_portfolio', JSON.stringify(portfolio));
-  localStorage.setItem('folio_history', JSON.stringify(history));
+  try {
+    localStorage.setItem('folio_portfolio', JSON.stringify(portfolio));
+    localStorage.setItem('folio_history', JSON.stringify(history));
+  } catch(e) {}
 }
 
 init();
