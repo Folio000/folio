@@ -1109,7 +1109,15 @@ async function send() {
 }
 
 function renderLoading(el) {
-  el.innerHTML = '<div class="loading-box"><div class="spinner"></div><span>Welto analyse les marchés en temps réel…</span></div>';
+  const loadingMsgs = [
+    'Welto vous prépare une analyse complète…',
+    'Welto croise les données pour vous éclairer…',
+    'Welto recherche les dernières actualités…',
+    'Welto vous aide à mieux comprendre la finance…',
+    'Welto synthétise les informations disponibles…',
+  ];
+  const msg = loadingMsgs[Math.floor(Math.random() * loadingMsgs.length)];
+  el.innerHTML = `<div class="loading-box"><div class="spinner"></div><span>${msg}</span></div>`;
 }
 
 function getDomain(url) {
@@ -1142,10 +1150,10 @@ function toTVSymbol(ticker) {
     '^FCHI':'EURONEXT:PX1', '^GDAXI':'XETR:DAX', '^STOXX50E':'EURONEXT:SX5E',
     '^N225':'TSE:NI225', '^HSI':'HKEX:HSI',
     '^TNX':'TVC:TNX', '^TYX':'TVC:TYX',
-    'GC=F':'COMEX:GC1!', 'CL=F':'NYMEX:CL1!',
-    'SI=F':'COMEX:SI1!', 'HG=F':'COMEX:HG1!', 'NG=F':'NYMEX:NG1!',
-    'BTC-USD':'BITSTAMP:BTCUSD', 'ETH-USD':'BITSTAMP:ETHUSD',
-    'SOL-USD':'BITSTAMP:SOLUSD', 'XRP-USD':'BITSTAMP:XRPUSD',
+    'GC=F':'TVC:GOLD', 'CL=F':'TVC:USOIL',
+    'SI=F':'TVC:SILVER', 'HG=F':'TVC:COPPER', 'NG=F':'TVC:NATGAS',
+    'BTC-USD':'COINBASE:BTCUSD', 'ETH-USD':'COINBASE:ETHUSD',
+    'SOL-USD':'COINBASE:SOLUSD', 'XRP-USD':'BITSTAMP:XRPUSD',
   };
   if (map[ticker]) return map[ticker];
   if (ticker.endsWith('.PA')) return 'EURONEXT:' + ticker.replace('.PA','');
