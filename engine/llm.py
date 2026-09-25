@@ -1,6 +1,6 @@
 """
-engine/llm.py — Groq LLM client pour Folio v7
-Modèle : llama-3.3-70b-versatile
+engine/llm.py — Groq LLM client pour Folio v8
+Modèle : llama3-70b-8192
 Rôle   : moteur d'éducation financière, jamais de conseil personnalisé
 """
 
@@ -65,7 +65,7 @@ def ask(question: str, context: str) -> str:
 
     try:
         completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="llama3-70b-8192",
             messages=messages,
             max_tokens=1024,
             temperature=0.3,
