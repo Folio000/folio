@@ -539,48 +539,76 @@ html, body {
   padding: 1px 7px;
   border-radius: 8px;
 }
-/* ── Sources d'articles ────────────────────────── */
-.sources-section {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
+/* ── Actualités liées ───────────────────────────── */
+.news-section {
+  margin-top: 0;
 }
-.sources-label {
+.news-section .section-label {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.4px;
   color: var(--text3);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
-.sources-list {
+.news-cards {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.news-cards::-webkit-scrollbar { height: 4px; }
+.news-cards::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.news-card {
+  flex-shrink: 0;
+  width: 210px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 13px;
+  text-decoration: none;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
+  transition: border-color .14s, box-shadow .14s;
+  cursor: pointer;
 }
-.source-link {
+.news-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 8px rgba(42,96,73,.10);
+}
+.news-card-header {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--accent);
-  text-decoration: none;
-  line-height: 1.4;
+  align-items: center;
+  gap: 7px;
 }
-.source-link:hover { text-decoration: underline; }
-.source-link:hover .source-name { color: var(--accent-hover); }
-.source-dot {
-  width: 4px; height: 4px;
-  border-radius: 50%;
-  background: var(--accent);
+.news-favicon {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
   flex-shrink: 0;
-  margin-top: 6px;
+  object-fit: contain;
 }
-.source-title { flex: 1; min-width: 0; }
-.source-name {
+.news-source-name {
   font-size: 11px;
+  font-weight: 700;
   color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
   white-space: nowrap;
-  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.news-card-title {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* ── TradingView widget ────────────────────────── */
@@ -1084,25 +1112,51 @@ function renderLoading(el) {
   el.innerHTML = '<div class="loading-box"><div class="spinner"></div><span>Welto analyse les marchés en temps réel…</span></div>';
 }
 
+function getDomain(url) {
+  try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; }
+}
+
+function newsCardsHtml(sources) {
+  if (!sources.length) return '';
+  const cards = sources.map(s => {
+    const domain = getDomain(s.url);
+    const favicon = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32` : '';
+    const name = s.source || domain || '';
+    return `<a class="news-card" href="${escHtml(s.url)}" target="_blank" rel="noopener">
+      <div class="news-card-header">
+        ${favicon ? `<img class="news-favicon" src="${escHtml(favicon)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
+        <span class="news-source-name">${escHtml(name)}</span>
+      </div>
+      <div class="news-card-title">${escHtml(s.title)}</div>
+    </a>`;
+  }).join('');
+  return `<div class="news-section">
+    <div class="section-label">ACTUALITÉS LIÉES</div>
+    <div class="news-cards">${cards}</div>
+  </div>`;
+}
+
+function toTVSymbol(ticker) {
+  const map = {
+    '^IXIC':'NASDAQ:IXIC', '^GSPC':'SP:SPX', '^DJI':'DJ:DJI',
+    '^FCHI':'EURONEXT:PX1', '^GDAXI':'XETR:DAX', '^STOXX50E':'EURONEXT:SX5E',
+    '^N225':'TSE:NI225', '^HSI':'HKEX:HSI',
+    '^TNX':'TVC:TNX', '^TYX':'TVC:TYX',
+    'GC=F':'COMEX:GC1!', 'CL=F':'NYMEX:CL1!',
+    'SI=F':'COMEX:SI1!', 'HG=F':'COMEX:HG1!', 'NG=F':'NYMEX:NG1!',
+    'BTC-USD':'BITSTAMP:BTCUSD', 'ETH-USD':'BITSTAMP:ETHUSD',
+    'SOL-USD':'BITSTAMP:SOLUSD', 'XRP-USD':'BITSTAMP:XRPUSD',
+  };
+  if (map[ticker]) return map[ticker];
+  if (ticker.endsWith('.PA')) return 'EURONEXT:' + ticker.replace('.PA','');
+  if (ticker.endsWith('.MI')) return 'MIL:' + ticker.replace('.MI','');
+  return ticker;
+}
+
 function renderResult(el, q, data) {
   const lang = data.lang || 'fr';
   const sources = data.sources || [];
   const ticker = data.ticker || null;
-
-  // Sources block inside answer card
-  let sourcesHtml = '';
-  if (sources.length) {
-    const links = sources.map(s => `
-      <a class="source-link" href="${escHtml(s.url)}" target="_blank" rel="noopener">
-        <span class="source-dot"></span>
-        <span class="source-title">${escHtml(s.title)}</span>
-        ${s.source ? `<span class="source-name">${escHtml(s.source)}</span>` : ''}
-      </a>`).join('');
-    sourcesHtml = `<div class="sources-section">
-      <div class="sources-label">SOURCES</div>
-      <div class="sources-list">${links}</div>
-    </div>`;
-  }
 
   let html = `<div class="answer-card">
     <div class="answer-q">"${escHtml(q)}"</div>
@@ -1110,12 +1164,16 @@ function renderResult(el, q, data) {
       <span class="answer-title">Analyse Welto</span>
       <span class="answer-lang-tag">${LANG_NAME[lang] || lang}</span>
     </div>
-    <div class="answer-body">${parseAnswer(data.answer || '')}${sourcesHtml}</div>
+    <div class="answer-body">${parseAnswer(data.answer || '')}</div>
   </div>`;
+
+  // News cards — always shown when sources exist
+  if (sources.length) {
+    html += newsCardsHtml(sources);
+  }
 
   // TradingView mini chart — only when a ticker is known
   if (ticker) {
-    const tvSymbol = ticker.includes('.') ? ticker : ticker;
     html += `<div class="chart-section">
       <div class="chart-label">GRAPHIQUE — ${escHtml(ticker)}</div>
       <div class="chart-wrap" id="tv-widget-wrap"></div>
@@ -1141,7 +1199,7 @@ function renderResult(el, q, data) {
 
   // Inject TradingView widget after DOM update
   if (ticker) {
-    injectTradingViewWidget(ticker);
+    injectTradingViewWidget(toTVSymbol(ticker));
   }
 }
 
