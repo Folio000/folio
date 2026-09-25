@@ -1,5 +1,5 @@
 """
-main.py — Folio v8 API
+main.py — Welto v8 API
 Moteur d'éducation financière — FastAPI + Groq + RSS
 """
 
@@ -17,7 +17,7 @@ from engine import memory
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Folio", version="8.2")
+app = FastAPI(title="Welto", version="8.2")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
@@ -64,6 +64,50 @@ def snapshot():
     """Snapshot des principaux indices et titres."""
     assets = get_snapshot()
     return {"assets": assets}
+
+
+@app.get("/api/suggestions")
+def get_suggestions():
+    """
+    Génère 5 questions éducatives basées sur les actifs les plus actifs du moment.
+    Fallback sur des questions génériques en cas d'erreur.
+    """
+    import json, re
+    from engine.llm import ask as llm_ask
+
+    FALLBACK = [
+        "Pourquoi le Nasdaq corrige quand les taux montent ?",
+        "Qu'est-ce que le PER et comment l'interpréter ?",
+        "Comment l'inflation affecte-t-elle les marchés actions ?",
+        "Qu'est-ce qui fait monter ou baisser l'or ?",
+        "Que signifient les résultats trimestriels d'Apple ?",
+    ]
+
+    try:
+        assets = get_snapshot()
+        movers = sorted(assets, key=lambda x: abs(x.get("change_pct", 0) or 0), reverse=True)[:6]
+        lines = "\n".join(
+            f"- {a.get('name', a.get('ticker', ''))}: {a.get('change_pct', 0):+.2f}%"
+            for a in movers
+        )
+        context = f"Actifs les plus actifs aujourd'hui :\n{lines}"
+        prompt = (
+            "En te basant sur ces données de marché actuelles, génère exactement 5 questions "
+            "éducatives et pertinentes qu'un investisseur particulier pourrait se poser aujourd'hui. "
+            "Chaque question doit faire entre 35 et 70 caractères, être claire et éducative. "
+            "Réponds UNIQUEMENT avec un tableau JSON valide, sans texte autour. "
+            'Exemple : ["Question 1 ?", "Question 2 ?"]'
+        )
+        raw = llm_ask(prompt, context, "fr")
+        match = re.search(r'\[.*?\]', raw, re.DOTALL)
+        if match:
+            questions = json.loads(match.group())
+            if isinstance(questions, list) and len(questions) >= 3:
+                return {"questions": [str(q) for q in questions[:5]]}
+    except Exception as e:
+        logger.warning(f"[suggestions] erreur: {e}")
+
+    return {"questions": FALLBACK}
 
 
 @app.get("/api/health")

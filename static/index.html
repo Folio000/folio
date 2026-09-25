@@ -976,7 +976,7 @@ html, body {
         <p>Posez une question sur un titre, un secteur ou une tendance. Welto croise les données de marché et l'actualité pour vous apporter un éclairage sourcé.</p>
       </div>
 
-      <div class="chips">
+      <div class="chips" id="chips">
         <button class="chip" onclick="pick(this)">Pourquoi le Nasdaq corrige quand les taux montent ?</button>
         <button class="chip" onclick="pick(this)">Qu'est-ce que le PER et comment l'interpréter ?</button>
         <button class="chip" onclick="pick(this)">Comment l'inflation affecte-t-elle les marchés actions ?</button>
@@ -1074,6 +1074,25 @@ function pick(el) {
   document.getElementById('qinput').value = el.textContent;
   document.getElementById('qinput').focus();
 }
+
+async function loadSuggestions() {
+  try {
+    const res = await fetch('/api/suggestions');
+    if (!res.ok) return;
+    const data = await res.json();
+    const questions = data.questions;
+    if (!Array.isArray(questions) || questions.length < 3) return;
+    const chips = document.getElementById('chips');
+    chips.innerHTML = questions
+      .slice(0, 5)
+      .map(q => `<button class="chip" onclick="pick(this)">${q}</button>`)
+      .join('');
+  } catch (_) {
+    // garder les suggestions par défaut
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadSuggestions);
 
 // ── Send ────────────────────────────────────────────────────
 async function send() {
