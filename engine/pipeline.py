@@ -1,5 +1,5 @@
 """
-engine/pipeline.py — Orchestration Folio v8
+engine/pipeline.py — Orchestration Welto v8
 Flux :
 1. Détection langue + extraction ticker
 2. Récupération mémoire (analyses passées du même ticker)

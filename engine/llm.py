@@ -1,5 +1,5 @@
 """
-engine/llm.py — Groq LLM client pour Folio v8
+engine/llm.py — Groq LLM client pour Welto v8
 Modèle : openai/gpt-oss-20b
 Rôle   : moteur d'éducation financière, jamais de conseil personnalisé
 """
@@ -20,7 +20,7 @@ def _get_client() -> Groq:
     return _client
 
 
-SYSTEM_PROMPT = """Tu es Folio, un moteur d'éducation financière.
+SYSTEM_PROMPT = """Tu es Welto, un moteur d'éducation financière.
 Tu expliques les dynamiques de marché, tu analyses l'impact des actualités sur les actions et tu fournis du contenu pédagogique équilibré.
 
 Règles absolues :
