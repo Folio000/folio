@@ -70,10 +70,11 @@ def snapshot():
 def get_suggestions():
     """
     Génère 5 questions éducatives basées sur les actifs les plus actifs du moment.
+    Utilise Groq directement (sans le system prompt principal) pour du JSON propre.
     Fallback sur des questions génériques en cas d'erreur.
     """
-    import json, re
-    from engine.llm import ask as llm_ask
+    import json, re, os
+    from groq import Groq
 
     FALLBACK = [
         "Pourquoi le Nasdaq corrige quand les taux montent ?",
@@ -90,15 +91,33 @@ def get_suggestions():
             f"- {a.get('name', a.get('ticker', ''))}: {a.get('change_pct', 0):+.2f}%"
             for a in movers
         )
-        context = f"Actifs les plus actifs aujourd'hui :\n{lines}"
-        prompt = (
-            "En te basant sur ces données de marché actuelles, génère exactement 5 questions "
-            "éducatives et pertinentes qu'un investisseur particulier pourrait se poser aujourd'hui. "
-            "Chaque question doit faire entre 35 et 70 caractères, être claire et éducative. "
-            "Réponds UNIQUEMENT avec un tableau JSON valide, sans texte autour. "
-            'Exemple : ["Question 1 ?", "Question 2 ?"]'
+
+        client = Groq(api_key=os.environ["GROQ_API_KEY"])
+        completion = client.chat.completions.create(
+            model="openai/gpt-oss-20b",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Tu es un assistant qui génère des questions financières éducatives. "
+                        "Réponds UNIQUEMENT avec un tableau JSON valide. Aucun texte avant ou après."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"Actifs les plus actifs aujourd'hui :\n{lines}\n\n"
+                        "Génère exactement 5 questions éducatives et pertinentes qu'un investisseur "
+                        "particulier pourrait se poser aujourd'hui, basées sur ces données. "
+                        "Chaque question : 35 à 70 caractères, en français. "
+                        'Format : ["Question 1 ?", "Question 2 ?", "Question 3 ?", "Question 4 ?", "Question 5 ?"]'
+                    ),
+                },
+            ],
+            max_tokens=300,
+            temperature=0.5,
         )
-        raw = llm_ask(prompt, context, "fr")
+        raw = completion.choices[0].message.content.strip()
         match = re.search(r'\[.*?\]', raw, re.DOTALL)
         if match:
             questions = json.loads(match.group())
