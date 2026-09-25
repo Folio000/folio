@@ -255,8 +255,8 @@ def run(question: str) -> dict:
     # Construction du contexte enrichi + sources d'articles
     context, sources = _build_context(ticker, question, lang)
 
-    # Appel LLM
-    answer = ask(question, context)
+    # Appel LLM (langue explicitement transmise)
+    answer = ask(question, context, lang)
 
     # Persistance asynchrone — thread daemon, ne bloque pas la réponse
     _fire_and_forget(

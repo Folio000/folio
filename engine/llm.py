@@ -48,18 +48,32 @@ RISQUES À SURVEILLER
 Tu n'es pas un conseiller financier. Tu fournis une analyse de marché à des fins éducatives."""
 
 
-def ask(question: str, context: str) -> str:
+LANG_NAMES = {
+    "fr": "français", "en": "English", "de": "Deutsch",
+    "es": "español", "it": "italiano", "pt": "português",
+    "nl": "Nederlands", "zh": "中文", "ja": "日本語", "ar": "العربية",
+}
+
+
+def ask(question: str, context: str, lang: str = "fr") -> str:
     """
     Envoie une question enrichie au LLM et retourne la réponse textuelle.
     context : bloc de données marché/news/macro injecté avant la question.
+    lang    : code ISO de la langue détectée (ex: 'en', 'fr', 'de').
     """
     client = _get_client()
+    lang_name = LANG_NAMES.get(lang, lang)
 
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {
             "role": "user",
-            "content": f"Données disponibles :\n{context}\n\nQuestion : {question}",
+            "content": (
+                f"Données disponibles :\n{context}\n\n"
+                f"Question : {question}\n\n"
+                f"INSTRUCTION OBLIGATOIRE : ta réponse doit être rédigée UNIQUEMENT en {lang_name}. "
+                f"Ne réponds dans aucune autre langue."
+            ),
         },
     ]
 
