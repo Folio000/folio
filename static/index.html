@@ -1353,7 +1353,7 @@ function renderResult(el, q, data) {
       <span class="answer-title">Analyse Welto</span>
       <span class="answer-lang-tag">${LANG_NAME[lang] || lang}</span>
     </div>
-    <div class="answer-body">${parseAnswer(data.answer || '')}</div>
+    <div class="answer-body">${data.answer ? parseAnswer(data.answer) : '<p style="color:var(--text2);font-style:italic;padding:8px 0">Désolé, une erreur est survenue lors de la génération de la réponse. Veuillez reformuler votre question.</p>'}</div>
   </div>`;
 
   // News cards — always shown when sources exist
