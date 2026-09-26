@@ -69,12 +69,10 @@ def snapshot():
 @app.get("/api/suggestions")
 def get_suggestions():
     """
-    Génère 5 questions éducatives basées sur les actifs les plus actifs du moment.
-    Utilise Groq directement (sans le system prompt principal) pour du JSON propre.
-    Fallback sur des questions génériques en cas d'erreur.
+    Génère 5 questions éducatives dynamiques basées sur les actifs les plus actifs du moment.
+    Pas de LLM — génération déterministe par templates pour une fiabilité maximale.
     """
-    import json, re, os
-    from groq import Groq
+    import random
 
     FALLBACK = [
         "Pourquoi le Nasdaq corrige quand les taux montent ?",
@@ -84,45 +82,66 @@ def get_suggestions():
         "Que signifient les résultats trimestriels d'Apple ?",
     ]
 
+    # Templates par type d'actif
+    TEMPLATES_UP = [
+        "Pourquoi {name} progresse-t-il aujourd'hui ?",
+        "Qu'est-ce qui explique la hausse de {name} ?",
+        "Quels sont les catalyseurs derrière {name} ?",
+        "Comment analyser la progression de {name} ?",
+    ]
+    TEMPLATES_DOWN = [
+        "Pourquoi {name} recule-t-il aujourd'hui ?",
+        "Qu'est-ce qui explique la baisse de {name} ?",
+        "Faut-il s'inquiéter du repli de {name} ?",
+        "Que signifie la correction de {name} ?",
+    ]
+    GENERIC = [
+        "Comment lire un graphique boursier ?",
+        "Qu'est-ce que la volatilité des marchés ?",
+        "Comment fonctionne un ETF ?",
+        "Qu'est-ce que la diversification de portefeuille ?",
+        "Comment interpréter les taux d'intérêt de la Fed ?",
+        "Qu'est-ce que le PER et comment l'interpréter ?",
+        "Comment l'inflation affecte-t-elle les marchés ?",
+        "Qu'est-ce qu'une obligation d'État ?",
+        "Comment fonctionne le PEA en France ?",
+        "Qu'est-ce que la flat tax sur les plus-values ?",
+    ]
+
     try:
         assets = get_snapshot()
-        movers = sorted(assets, key=lambda x: abs(x.get("change_pct", 0) or 0), reverse=True)[:6]
-        lines = "\n".join(
-            f"- {a.get('name', a.get('ticker', ''))}: {a.get('change_pct', 0):+.2f}%"
-            for a in movers
-        )
+        # Top 4 actifs par variation absolue
+        movers = sorted(
+            [a for a in assets if a.get("name") and a.get("change_pct") is not None],
+            key=lambda x: abs(x.get("change_pct", 0) or 0),
+            reverse=True,
+        )[:4]
 
-        client = Groq(api_key=os.environ["GROQ_API_KEY"])
-        completion = client.chat.completions.create(
-            model="openai/gpt-oss-20b",
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "Tu es un assistant qui génère des questions financières éducatives. "
-                        "Réponds UNIQUEMENT avec un tableau JSON valide. Aucun texte avant ou après."
-                    ),
-                },
-                {
-                    "role": "user",
-                    "content": (
-                        f"Actifs les plus actifs aujourd'hui :\n{lines}\n\n"
-                        "Génère exactement 5 questions éducatives et pertinentes qu'un investisseur "
-                        "particulier pourrait se poser aujourd'hui, basées sur ces données. "
-                        "Chaque question : 35 à 70 caractères, en français. "
-                        'Format : ["Question 1 ?", "Question 2 ?", "Question 3 ?", "Question 4 ?", "Question 5 ?"]'
-                    ),
-                },
-            ],
-            max_tokens=300,
-            temperature=0.5,
-        )
-        raw = completion.choices[0].message.content.strip()
-        match = re.search(r'\[.*?\]', raw, re.DOTALL)
-        if match:
-            questions = json.loads(match.group())
-            if isinstance(questions, list) and len(questions) >= 3:
-                return {"questions": [str(q) for q in questions[:5]]}
+        questions = []
+        used_generic = random.sample(GENERIC, k=min(3, len(GENERIC)))
+
+        for asset in movers[:3]:
+            name = asset.get("name", "").strip()
+            if not name:
+                continue
+            # Raccourcir les noms trop longs
+            if len(name) > 20:
+                name = name.split(" ")[0]
+            pct = asset.get("change_pct", 0) or 0
+            tpls = TEMPLATES_UP if pct >= 0 else TEMPLATES_DOWN
+            q = random.choice(tpls).format(name=name)
+            questions.append(q)
+
+        # Compléter avec des questions génériques
+        for gq in used_generic:
+            if len(questions) >= 5:
+                break
+            if gq not in questions:
+                questions.append(gq)
+
+        if len(questions) >= 3:
+            return {"questions": questions[:5]}
+
     except Exception as e:
         logger.warning(f"[suggestions] erreur: {e}")
 
