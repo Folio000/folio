@@ -1305,10 +1305,51 @@ function getDomain(url) {
   try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; }
 }
 
+// Mapping source name → domaine réel (évite le logo Google pour les articles via Google News RSS)
+const SOURCE_DOMAIN_MAP = {
+  'boursorama': 'boursorama.com',
+  'les echos': 'lesechos.fr',
+  'la tribune': 'latribune.fr',
+  'euronews': 'euronews.com',
+  'reuters': 'reuters.com',
+  'cnbc': 'cnbc.com',
+  'bloomberg': 'bloomberg.com',
+  'le monde': 'lemonde.fr',
+  'le figaro': 'lefigaro.fr',
+  'bfm': 'bfmtv.com',
+  'financial times': 'ft.com',
+  'wsj': 'wsj.com',
+  'wall street journal': 'wsj.com',
+  'yahoo finance': 'finance.yahoo.com',
+  'marketwatch': 'marketwatch.com',
+  'seeking alpha': 'seekingalpha.com',
+  'morningstar': 'morningstar.com',
+  'zonebourse': 'zonebourse.com',
+  'investir': 'investir.lesechos.fr',
+  'sec edgar': 'sec.gov',
+  'amnesty': 'amnesty.org',
+  'kucoin': 'kucoin.com',
+  'capital': 'capital.fr',
+  'challenges': 'challenges.fr',
+  'lexpansion': 'lexpansion.com',
+  'latribune': 'latribune.fr',
+  'lefigaro': 'lefigaro.fr',
+};
+
+function getSourceDomain(source, url) {
+  const sLower = (source || '').toLowerCase();
+  for (const [key, domain] of Object.entries(SOURCE_DOMAIN_MAP)) {
+    if (sLower.includes(key)) return domain;
+  }
+  const domain = getDomain(url);
+  // Pas de favicon Google pour les redirections Google News
+  return domain === 'news.google.com' ? '' : domain;
+}
+
 function newsCardsHtml(sources) {
   if (!sources.length) return '';
   const cards = sources.map(s => {
-    const domain = getDomain(s.url);
+    const domain = getSourceDomain(s.source, s.url);
     const favicon = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32` : '';
     const name = s.source || domain || '';
     return `<a class="news-card" href="${escHtml(s.url)}" target="_blank" rel="noopener">
