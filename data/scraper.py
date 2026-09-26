@@ -438,13 +438,64 @@ def scrape_wsj_rss() -> list[dict]:
 # POINT D'ENTRÉE PRINCIPAL
 # ═══════════════════════════════════════════════════════════════════════
 
+_STOPWORDS_FR = {
+    "qu", "est", "ce", "que", "quoi", "comment", "pourquoi", "quel", "quelle",
+    "quels", "quelles", "les", "des", "une", "un", "la", "le", "en", "et",
+    "ou", "de", "du", "au", "aux", "par", "sur", "dans", "pour", "avec",
+    "sans", "mais", "donc", "or", "ni", "car", "si", "je", "tu", "il",
+    "elle", "nous", "vous", "ils", "elles", "se", "sa", "son", "ses",
+    "mon", "ton", "ma", "ta", "mes", "tes", "faut", "peut", "doit",
+    "the", "is", "are", "what", "how", "why", "when", "where", "who",
+    "a", "an", "of", "in", "to", "and", "or", "for", "on", "at", "by",
+}
+
+def _extract_keywords(question: str, n: int = 5) -> list[str]:
+    """Extrait les mots porteurs de sens d'une question (sans stopwords)."""
+    words = re.findall(r"[a-zA-ZÀ-ÿ]{3,}", question.lower())
+    return [w for w in words if w not in _STOPWORDS_FR][:n]
+
+
+def scrape_google_news_rss(keywords: list[str], lang: str = "fr") -> list[dict]:
+    """Google News RSS — recherche par mots-clés (très pertinent pour questions sans ticker)."""
+    articles = []
+    try:
+        query = "+".join(keywords[:4])
+        hl = "fr" if lang == "fr" else "en"
+        gl = "FR" if lang == "fr" else "US"
+        url = f"https://news.google.com/rss/search?q={query}&hl={hl}&gl={gl}&ceid={gl}:{hl}"
+        feed = feedparser.parse(url)
+        for entry in feed.entries[:6]:
+            title = entry.get("title", "")
+            # Nettoyer le titre Google News (format: "Titre - Source")
+            if " - " in title:
+                parts = title.rsplit(" - ", 1)
+                title = parts[0].strip()
+                source = parts[1].strip()
+            else:
+                source = "Google News"
+            articles.append({
+                "source": source,
+                "title": title,
+                "content": BeautifulSoup(
+                    entry.get("summary", ""), "lxml"
+                ).get_text(" ", strip=True)[:500],
+                "url": entry.get("link", ""),
+            })
+    except Exception as e:
+        logger.debug(f"google_news_rss: {e}")
+    return articles
+
+
 def scrape_all(ticker: Optional[str], question: str) -> list[dict]:
     """
     Lance tous les scrapers en parallèle.
     Retourne une liste consolidée d'articles déduplicatés.
+    - Avec ticker  : sources marché spécifiques + news filtrées + Google News
+    - Sans ticker  : news filtrées par mots-clés + Google News (pas de WSJ/FT/BFM non filtrés)
     """
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
+    keywords = _extract_keywords(question)
     tasks = {}
 
     if ticker:
@@ -457,14 +508,18 @@ def scrape_all(ticker: Optional[str], question: str) -> list[dict]:
         tasks["zonebourse"]   = lambda: scrape_zonebourse(ticker)
         tasks["investir"]     = lambda: scrape_investir_les_echos(ticker)
         tasks["sec"]          = lambda: scrape_sec_edgar(ticker)
+        # Flux généraux non filtrés — OK avec ticker car contexte marché
+        tasks["bfm"]          = lambda: scrape_bfm_bourse()
+        tasks["ft"]           = lambda: scrape_ft_rss()
+        tasks["wsj"]          = lambda: scrape_wsj_rss()
 
-    # Sources générales (toujours actives)
-    tasks["bfm"]     = lambda: scrape_bfm_bourse()
-    tasks["ft"]      = lambda: scrape_ft_rss()
-    tasks["wsj"]     = lambda: scrape_wsj_rss()
-    tasks["reuters"] = lambda: scrape_reuters_search(question)
-    tasks["echos"]   = lambda: scrape_les_echos(question)
-    tasks["cnbc"]    = lambda: scrape_cnbc_rss(question)
+    # Sources filtrées par mots-clés — toujours actives
+    if keywords:
+        kw_str = " ".join(keywords)
+        tasks["google_news"]  = lambda: scrape_google_news_rss(keywords)
+        tasks["reuters"]      = lambda: scrape_reuters_search(kw_str)
+        tasks["echos"]        = lambda: scrape_les_echos(kw_str)
+        tasks["cnbc"]         = lambda: scrape_cnbc_rss(kw_str)
 
     results = []
     seen_titles: set[str] = set()
