@@ -892,11 +892,111 @@ html, body {
   flex-shrink: 0;
 }
 
-@media (max-width: 700px) {
-  .shell { grid-template-rows: 72px 1fr; }
-  .tab-nav { margin-left: 12px; }
-  .brand-name { font-size: 28px; }
-  .upload-bar, .upload-loaded { max-width: 100%; }
+/* ── MOBILE (≤ 640px) ──────────────────────────────── */
+@media (max-width: 640px) {
+
+  /* Viewport hauteur dynamique (gère la barre d'adresse mobile) */
+  html, body { height: 100%; }
+  .shell {
+    height: 100dvh;
+    grid-template-rows: 56px 1fr;
+  }
+
+  /* Topbar : logo + nom seulement */
+  .topbar { padding: 0 16px; gap: 10px; }
+  .brand-name { font-size: 20px; }
+  .tab-nav { display: none; }           /* tabs déplacés en bas */
+  .topbar-meta { display: none; }       /* bouton upload masqué */
+
+  /* Barre de navigation basse */
+  .mobile-bottom-nav {
+    display: flex !important;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 56px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .mobile-tab-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border: none;
+    background: none;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-tab-btn.active { color: var(--accent); }
+  .mobile-tab-btn svg { width: 20px; height: 20px; }
+
+  /* Compenser la barre basse dans le scroll */
+  .center-scroll {
+    padding: 14px 14px calc(70px + env(safe-area-inset-bottom, 0px)) 14px;
+    gap: 12px;
+  }
+  .hist-list {
+    padding: 12px 14px calc(70px + env(safe-area-inset-bottom, 0px)) 14px;
+  }
+  .hist-topbar { padding: 12px 14px; }
+  .pf-view {
+    padding: 14px 14px calc(70px + env(safe-area-inset-bottom, 0px)) 14px;
+  }
+
+  /* Welcome */
+  .welcome { padding: 12px 0 4px; }
+  .welcome-folio { font-size: 24px; }
+  .welcome h2 { font-size: 17px; }
+  .welcome p { font-size: 13px; }
+
+  /* Chips — scroll horizontal pour gagner de la hauteur */
+  .chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex-shrink: 0;
+    font-size: 12.5px;
+    padding: 7px 14px;
+    white-space: nowrap;
+  }
+
+  /* Question box */
+  .ask-wrap { padding: 0; }
+  .ask-textarea { font-size: 15px; min-height: 56px; }
+  .ask-hint { display: none; }
+  .btn-send { padding: 8px 18px; font-size: 13px; }
+
+  /* Answer */
+  .answer-body { padding: 12px; font-size: 13.5px; line-height: 1.65; }
+  .answer-q { font-size: 12px; }
+  .answer-bullet { font-size: 13px; }
+
+  /* Chart */
+  .chart-wrap { height: 210px; }
+  .chart-label { font-size: 10px; padding: 8px 12px; }
+
+  /* Assets grid 2 colonnes */
+  .assets-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .asset-card { padding: 10px; }
+  .ac-price { font-size: 15px; }
+
+  /* Drop zone */
+  .drop-zone { padding: 28px 16px; }
 }
 </style>
 
@@ -916,8 +1016,8 @@ html, body {
     </div>
 
     <nav class="tab-nav">
-      <button class="tab-btn active" data-tab="conseil" onclick="switchTab('conseil',this)">Analyse</button>
-      <button class="tab-btn" data-tab="historique" onclick="switchTab('historique',this)">Historique</button>
+      <button class="tab-btn active" data-tab="conseil" onclick="switchTab('conseil')">Analyse</button>
+      <button class="tab-btn" data-tab="historique" onclick="switchTab('historique')">Historique</button>
     </nav>
 
     <div class="topbar-meta">
@@ -976,13 +1076,7 @@ html, body {
         <p>Posez une question sur un titre, un secteur ou une tendance. Welto croise les données de marché et l'actualité pour vous apporter un éclairage sourcé.</p>
       </div>
 
-      <div class="chips" id="chips">
-        <button class="chip" onclick="pick(this)">Pourquoi le Nasdaq corrige quand les taux montent ?</button>
-        <button class="chip" onclick="pick(this)">Qu'est-ce que le PER et comment l'interpréter ?</button>
-        <button class="chip" onclick="pick(this)">Comment l'inflation affecte-t-elle les marchés actions ?</button>
-        <button class="chip" onclick="pick(this)">Qu'est-ce qui fait monter ou baisser l'or ?</button>
-        <button class="chip" onclick="pick(this)">Que signifient les résultats trimestriels d'Apple ?</button>
-      </div>
+      <div class="chips" id="chips"></div>
 
       <div class="ask-wrap">
         <div class="ask-box">
@@ -1003,6 +1097,16 @@ html, body {
 
   </main>
 
+  <nav class="mobile-bottom-nav" id="mobile-nav">
+    <button class="mobile-tab-btn active" data-tab="conseil" onclick="switchTab('conseil'); mobileSwitch(this)">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Analyse
+    </button>
+    <button class="mobile-tab-btn" data-tab="historique" onclick="switchTab('historique'); mobileSwitch(this)">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      Historique
+    </button>
+  </nav>
 
 </div>
 
@@ -1027,14 +1131,17 @@ function init() {
 }
 
 // ── Tabs ────────────────────────────────────────────────────
-function switchTab(name, el) {
+function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.mobile-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   document.getElementById('tab-conseil').style.display = name === 'conseil' ? 'flex' : 'none';
   document.getElementById('tab-historique').style.display = name === 'historique' ? 'flex' : 'none';
 }
+function mobileSwitch(btn) {
+  // active state is handled inside switchTab; nothing extra needed
+}
 function switchTabByName(name) {
-  const btn = document.querySelector(`.tab-btn[data-tab="${name}"]`);
-  switchTab(name, btn);
+  switchTab(name);
 }
 
 
@@ -1075,20 +1182,32 @@ function pick(el) {
   document.getElementById('qinput').focus();
 }
 
+const DEFAULT_SUGGESTIONS = [
+  "Pourquoi le Nasdaq corrige quand les taux montent ?",
+  "Qu'est-ce que le PER et comment l'interpréter ?",
+  "Comment l'inflation affecte-t-elle les marchés actions ?",
+  "Qu'est-ce qui fait monter ou baisser l'or ?",
+  "Que signifient les résultats trimestriels d'Apple ?",
+];
+
+function renderChips(questions) {
+  const chips = document.getElementById('chips');
+  chips.innerHTML = questions
+    .slice(0, 5)
+    .map(q => `<button class="chip" onclick="pick(this)">${q}</button>`)
+    .join('');
+}
+
 async function loadSuggestions() {
   try {
     const res = await fetch('/api/suggestions');
-    if (!res.ok) return;
+    if (!res.ok) throw new Error();
     const data = await res.json();
     const questions = data.questions;
-    if (!Array.isArray(questions) || questions.length < 3) return;
-    const chips = document.getElementById('chips');
-    chips.innerHTML = questions
-      .slice(0, 5)
-      .map(q => `<button class="chip" onclick="pick(this)">${q}</button>`)
-      .join('');
+    if (!Array.isArray(questions) || questions.length < 3) throw new Error();
+    renderChips(questions);
   } catch (_) {
-    // garder les suggestions par défaut
+    renderChips(DEFAULT_SUGGESTIONS);
   }
 }
 
