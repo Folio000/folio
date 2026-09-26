@@ -68,6 +68,16 @@ TICKER_ALIASES: dict[str, str] = {
 
 _TICKER_RE = re.compile(r"\b([A-Z]{2,5}(?:[.-][A-Z]{2,4})?)\b")
 
+# Termes financiers génériques qui NE sont PAS des tickers boursiers
+_GENERIC_TERMS: set[str] = {
+    "ETF", "PEA", "PER", "PEG", "FCP", "OPCVM", "BCE", "FED", "ECB",
+    "PIB", "GDP", "PMI", "CPI", "IPP", "TVA", "VAT", "ISF", "IFI",
+    "TMI", "CSG", "RDS", "CAC", "DAX", "USA", "EUR", "USD", "GBP",
+    "JPY", "CHF", "API", "FAQ", "PDF", "ESG", "RSI", "MACD", "IPO",
+    "SPAC", "OPA", "OPE", "LBO", "DCF", "ROE", "ROA", "EPS", "BPA",
+    "EBIT", "EBITDA", "SBF", "VIX", "QE", "QT", "IA", "AI",
+}
+
 
 # ── Helpers ────────────────────────────────────────────────────────────
 
@@ -84,10 +94,11 @@ def _extract_ticker(text: str) -> str | None:
     for alias in sorted(TICKER_ALIASES, key=len, reverse=True):
         if alias in lower:
             return TICKER_ALIASES[alias]
-    # Ticker en majuscules dans le texte
+    # Ticker en majuscules dans le texte — exclure les termes génériques
     matches = _TICKER_RE.findall(text)
-    if matches:
-        return matches[0]
+    for m in matches:
+        if m not in _GENERIC_TERMS:
+            return m
     return None
 
 
