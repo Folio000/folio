@@ -147,67 +147,6 @@ html, body {
   overflow: hidden;
 }
 
-/* Portfolio */
-.positions { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
-.position {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 7px 8px;
-  background: var(--surface2);
-  border-radius: 7px;
-}
-.pos-ticker {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  color: var(--accent);
-  min-width: 52px;
-}
-.pos-name { flex: 1; font-size: 11px; color: var(--text2); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pos-amount { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.pos-del { background: none; border: none; color: var(--text3); cursor: pointer; padding: 0 2px; font-size: 15px; line-height: 1; }
-.pos-del:hover { color: var(--neg); }
-
-.pos-total {
-  padding: 7px 9px;
-  background: var(--accent-light);
-  border-radius: 7px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--accent);
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-
-.add-row { display: flex; gap: 5px; }
-.add-row input {
-  padding: 6px 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
-  color: var(--text);
-  font-size: 12px;
-  font-family: inherit;
-  min-width: 0;
-}
-.add-row input:focus { outline: none; border-color: var(--accent); }
-.add-row input::placeholder { color: var(--text3); }
-.add-row input:first-child { flex: 1.4; }
-.add-row input:nth-child(2) { flex: 1; }
-.btn-add {
-  padding: 6px 10px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-}
-
 /* ── Center ────────────────────────────────── */
 .center {
   display: flex;
@@ -688,210 +627,6 @@ html, body {
   margin: 0 auto;
 }
 
-/* ── Onglet Portefeuille — upload zone ─────── */
-.pf-view {
-  flex: 1;
-  overflow-y: auto;
-  padding: 28px 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  max-width: 900px;
-  width: 100%;
-  margin: 0 auto;
-}
-.pf-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.pf-title {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--text);
-}
-.pf-subtitle { font-size: 13px; color: var(--text2); margin-top: 2px; }
-
-.drop-zone {
-  border: 2px dashed var(--border);
-  border-radius: 14px;
-  padding: 48px 32px;
-  text-align: center;
-  background: var(--surface);
-  transition: border-color 0.15s, background 0.15s;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-.drop-zone.drag-over {
-  border-color: var(--accent);
-  background: var(--accent-light);
-}
-.drop-zone svg { color: var(--text3); transition: color 0.15s; }
-.drop-zone.drag-over svg { color: var(--accent); }
-.drop-zone-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text);
-}
-.drop-zone-sub {
-  font-size: 13px;
-  color: var(--text3);
-}
-.drop-zone-formats {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  margin-top: 4px;
-}
-.fmt-badge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 4px;
-  letter-spacing: 0.3px;
-}
-.fmt-badge.xlsx { background: #e6f2ed; color: #2a6049; }
-.fmt-badge.csv  { background: #e6edf7; color: #2a4a80; }
-.btn-browse {
-  padding: 8px 22px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 7px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  margin-top: 6px;
-  transition: background 0.15s;
-}
-.btn-browse:hover { background: var(--accent-hover); }
-
-/* Table preview */
-.pf-preview {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  overflow: hidden;
-}
-.pf-preview-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface2);
-}
-.pf-file-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-.pf-rows { font-size: 12px; color: var(--text3); }
-.btn-reset {
-  font-size: 12px;
-  color: var(--text3);
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  padding: 2px 6px;
-}
-.btn-reset:hover { color: var(--neg); }
-
-.pf-table-wrap { overflow-x: auto; }
-.pf-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-.pf-table th {
-  padding: 9px 14px;
-  text-align: left;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  color: var(--text3);
-  border-bottom: 1px solid var(--border);
-  background: var(--surface2);
-  white-space: nowrap;
-}
-.pf-table td {
-  padding: 9px 14px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-.pf-table tr:last-child td { border-bottom: none; }
-.pf-table tr:hover td { background: var(--accent-light); }
-.pf-table td:first-child { font-weight: 700; color: var(--accent); }
-
-.pf-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-.btn-analyse-pf {
-  padding: 9px 24px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.15s;
-}
-.btn-analyse-pf:hover { background: var(--accent-hover); }
-.btn-analyse-pf:disabled { opacity: 0.4; cursor: not-allowed; }
-.pf-hint { font-size: 12px; color: var(--text3); }
-
-/* ── Upload bar compacte (topbar droite) ─────── */
-.upload-bar {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 14px;
-  background: var(--surface2);
-  border: 1.5px dashed var(--border);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
-  color: var(--text2);
-  font-size: 13px;
-  font-family: inherit;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.upload-bar:hover, .upload-bar.drag-over {
-  border-color: var(--accent);
-  background: var(--accent-light);
-  color: var(--accent);
-}
-.upload-bar-label { font-weight: 500; }
-
-.upload-loaded {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 5px 12px;
-  background: var(--accent-light);
-  border: 1px solid var(--accent);
-  border-radius: 8px;
-  font-size: 12px;
-  color: var(--accent);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
 /* Cacher la barre mobile sur desktop */
 .mobile-bottom-nav { display: none; }
 
@@ -951,9 +686,6 @@ html, body {
     padding: 12px 14px calc(70px + env(safe-area-inset-bottom, 0px)) 14px;
   }
   .hist-topbar { padding: 12px 14px; }
-  .pf-view {
-    padding: 14px 14px calc(70px + env(safe-area-inset-bottom, 0px)) 14px;
-  }
 
   /* Welcome */
   .welcome { padding: 12px 0 4px; }
@@ -1023,8 +755,6 @@ html, body {
 }
 </style>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 <div class="shell">
 
   <!-- ── Topbar ── -->
@@ -1043,33 +773,6 @@ html, body {
       <button class="tab-btn" data-tab="historique" onclick="switchTab('historique')">Historique</button>
     </nav>
 
-    <div class="topbar-meta">
-      <!-- Zone dépôt compacte — top droite -->
-      <div class="upload-bar" id="upload-bar"
-        ondragover="dzOver(event)" ondragleave="dzLeave(event)" ondrop="dzDrop(event)"
-        onclick="document.getElementById('file-input').click()" title="Déposer un fichier Excel ou CSV">
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="17 8 12 3 7 8"/>
-          <line x1="12" y1="3" x2="12" y2="15"/>
-        </svg>
-        <span class="upload-bar-label">Importer Excel / CSV</span>
-        <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="fileChosen(event)">
-      </div>
-      <!-- Fichier chargé — remplace la zone de dépôt -->
-      <div class="upload-loaded" id="upload-loaded" style="display:none">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-        </svg>
-        <span id="pf-fname" style="font-weight:600"></span>
-        <span id="pf-rows" style="opacity:.7"></span>
-        <button class="btn-reset" onclick="resetPortfolio(); event.stopPropagation()">✕</button>
-      </div>
-
-    </div>
   </header>
 
   <!-- ── Main ── -->
@@ -1137,7 +840,6 @@ html, body {
 
 <script>
 // ── State ───────────────────────────────────────────────────
-let portfolio = tryParse('welto_portfolio', []);
 let history = tryParse('welto_history', []);
 let activeHistIdx = -1;
 
@@ -1169,37 +871,6 @@ function switchTabByName(name) {
   switchTab(name);
 }
 
-
-// ── Portfolio ───────────────────────────────────────────────
-function addPos() {
-  const t = document.getElementById('in-ticker').value.trim().toUpperCase();
-  const a = parseFloat(document.getElementById('in-amount').value);
-  if (!t || !a || a <= 0) return;
-  const i = portfolio.findIndex(p => p.ticker === t);
-  if (i >= 0) portfolio[i].amount += a;
-  else portfolio.push({ ticker: t, name: t, amount: a });
-  save(); renderPortfolio();
-  document.getElementById('in-ticker').value = '';
-  document.getElementById('in-amount').value = '';
-}
-function removePos(t) {
-  portfolio = portfolio.filter(p => p.ticker !== t);
-  save(); renderPortfolio();
-}
-function renderPortfolio() {
-  const el = document.getElementById('positions');
-  if (!portfolio.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:2px 0">Aucune position.</div>'; document.getElementById('pos-total').style.display='none'; return; }
-  el.innerHTML = portfolio.map(p => `
-    <div class="position">
-      <span class="pos-ticker">${p.ticker}</span>
-      <span class="pos-name">${p.name !== p.ticker ? p.name : ''}</span>
-      <span class="pos-amount">${fmt(p.amount)}€</span>
-      <button class="pos-del" onclick="removePos('${p.ticker}')" title="Retirer">×</button>
-    </div>`).join('');
-  const tot = portfolio.reduce((s,p) => s+p.amount, 0);
-  document.getElementById('pos-total').style.display = 'flex';
-  document.getElementById('pos-total-val').textContent = fmt(tot) + '€';
-}
 
 // ── Suggestions ─────────────────────────────────────────────
 function pick(el) {
