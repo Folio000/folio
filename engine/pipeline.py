@@ -82,8 +82,12 @@ _GENERIC_TERMS: set[str] = {
 # ── Helpers ────────────────────────────────────────────────────────────
 
 def _detect_lang(text: str) -> str:
+    # langdetect confond souvent néerlandais (nl) et afrikaans (af)
+    # car les deux langues sont très proches — on remonte af → nl
+    _LANG_REMAP: dict[str, str] = {"af": "nl"}
     try:
-        return detect(text)
+        lang = detect(text)
+        return _LANG_REMAP.get(lang, lang)
     except Exception:
         return "fr"
 
